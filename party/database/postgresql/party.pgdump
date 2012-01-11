@@ -1,0 +1,2203 @@
+--
+-- PostgreSQL database dump
+--
+
+SET statement_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = off;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+SET escape_string_warning = off;
+
+--
+-- Name: plpgsql; Type: PROCEDURAL LANGUAGE; Schema: -; Owner: nobody
+--
+
+CREATE OR REPLACE PROCEDURAL LANGUAGE plpgsql;
+
+
+ALTER PROCEDURAL LANGUAGE plpgsql OWNER TO nobody;
+
+SET search_path = public, pg_catalog;
+
+--
+-- Name: address_full_address_tf(); Type: FUNCTION; Schema: public; Owner: nsykes
+--
+
+CREATE FUNCTION address_full_address_tf() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+begin
+
+    NEW.full_address = 
+       NEW.street || ' ' || NEW.town 
+    || coalesce(' ' || NEW.county, '')
+    || coalesce(' ' || NEW.post_code, '');
+
+    return NEW;
+
+end;
+$$;
+
+
+ALTER FUNCTION public.address_full_address_tf() OWNER TO nsykes;
+
+--
+-- Name: get_contact_byid(integer); Type: FUNCTION; Schema: public; Owner: nsykes
+--
+
+CREATE FUNCTION get_contact_byid(p_id integer) RETURNS TABLE(id integer, type character, sub_type character, street character varying, town character varying, county character varying, post_code character varying, telephone_number character varying, email_address character varying)
+    LANGUAGE plpgsql
+    AS $$
+begin
+
+    return query
+        select c.id,
+	       c.type,
+	       coalesce(t.type, e.type, 'A'), 
+	       a.street,
+	       a.town,
+	       a.county,
+	       a.post_code,
+	       t.number,
+	       e.address
+	from   contact as c
+	 left join address as a
+	  on c.id = a.contact_id
+	 left join email as e
+	  on c.id = e.contact_id
+	 left join telephone as t
+	  on c.id = t.contact_id
+	where c.id = p_id;
+
+end;
+$$;
+
+
+ALTER FUNCTION public.get_contact_byid(p_id integer) OWNER TO nsykes;
+
+--
+-- Name: get_contact_bypartyid(integer); Type: FUNCTION; Schema: public; Owner: nsykes
+--
+
+CREATE FUNCTION get_contact_bypartyid(p_party_id integer) RETURNS TABLE(id integer, type character, sub_type character, detail character varying, valid_from date, valid_until date)
+    LANGUAGE plpgsql
+    AS $$
+begin
+
+    return query
+        select c.id,
+	       c.type,
+	       c.type,
+	       a.full_address,
+	       pc.valid_from,
+	       pc.valid_until
+	from   contact as c
+	 inner join address as a
+	  on c.id = a.contact_id
+	 inner join party_contact as pc
+	  on c.id = pc.contact_id
+	where  pc.party_id = p_party_id
+	union
+	select c.id,
+	       c.type,
+	       t.type,
+	       t.number,
+	       pc.valid_from,
+	       pc.valid_until
+	from   contact as c
+	 inner join telephone as t
+	  on c.id = t.contact_id
+	 inner join party_contact as pc
+	  on c.id = pc.contact_id
+	where  pc.party_id = p_party_id
+	union
+	select c.id,
+	       c.type,
+	       e.type,
+	       e.address,
+	       pc.valid_from,
+	       pc.valid_until
+	from   contact as c
+	 inner join email as e
+	  on c.id = e.contact_id
+	 inner join party_contact as pc
+	  on c.id = pc.contact_id
+	where  pc.party_id = p_party_id
+	order by 2,3,1;
+
+end;
+$$;
+
+
+ALTER FUNCTION public.get_contact_bypartyid(p_party_id integer) OWNER TO nsykes;
+
+--
+-- Name: get_party_byid(integer); Type: FUNCTION; Schema: public; Owner: nsykes
+--
+
+CREATE FUNCTION get_party_byid(p_id integer) RETURNS TABLE(id integer, type character, name character varying, first_name character varying, last_name character varying, date_of_birth date)
+    LANGUAGE plpgsql
+    AS $$
+begin
+
+    return query
+        select p.id,
+	       p.type,
+	       b.name,
+	       pr.first_name,
+	       pr.last_name,
+	       pr.date_of_birth
+	from   party as p
+	 left join person as pr
+	  on p.id = pr.party_id
+	 left join business as b
+	  on p.id = b.party_id
+	where p.id = p_id;
+
+end;
+$$;
+
+
+ALTER FUNCTION public.get_party_byid(p_id integer) OWNER TO nsykes;
+
+--
+-- Name: person_full_name_tf(); Type: FUNCTION; Schema: public; Owner: nsykes
+--
+
+CREATE FUNCTION person_full_name_tf() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+begin
+
+    NEW.full_name = 
+       NEW.first_name || ' ' || NEW.last_name;
+
+    return NEW;
+
+end;
+$$;
+
+
+ALTER FUNCTION public.person_full_name_tf() OWNER TO nsykes;
+
+--
+-- Name: search_party(character varying); Type: FUNCTION; Schema: public; Owner: nsykes
+--
+
+CREATE FUNCTION search_party(party_name character varying) RETURNS TABLE(id integer, name character varying)
+    LANGUAGE plpgsql
+    AS $$
+
+declare 
+    name_tsq tsquery;
+
+begin
+
+    name_tsq := plainto_tsquery('english', party_name);
+
+    return query
+        select p.party_id,
+	       p.full_name
+	from   person as p
+	where  (
+	    ( to_tsvector('english', p.first_name) @@ name_tsq )
+	    or
+	    ( to_tsvector('english', p.last_name) @@ name_tsq )
+	    or
+	    ( to_tsvector('english', p.full_name) @@ name_tsq )
+	)
+	union
+	select b.party_id, b.name
+	from   business as b
+	where  to_tsvector('english', b.name) @@ name_tsq 
+	order by 2,1 ;
+end;
+$$;
+
+
+ALTER FUNCTION public.search_party(party_name character varying) OWNER TO nsykes;
+
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
+--
+-- Name: address; Type: TABLE; Schema: public; Owner: nsykes; Tablespace: 
+--
+
+CREATE TABLE address (
+    contact_id integer NOT NULL,
+    street character varying(50) NOT NULL,
+    town character varying(50) NOT NULL,
+    county character varying(30),
+    post_code character varying(20),
+    full_address character varying(160)
+);
+
+
+ALTER TABLE public.address OWNER TO nsykes;
+
+--
+-- Name: business; Type: TABLE; Schema: public; Owner: nsykes; Tablespace: 
+--
+
+CREATE TABLE business (
+    party_id integer NOT NULL,
+    name character varying(60) NOT NULL
+);
+
+
+ALTER TABLE public.business OWNER TO nsykes;
+
+--
+-- Name: contact_sequence; Type: SEQUENCE; Schema: public; Owner: nsykes
+--
+
+CREATE SEQUENCE contact_sequence
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.contact_sequence OWNER TO nsykes;
+
+--
+-- Name: contact_sequence; Type: SEQUENCE SET; Schema: public; Owner: nsykes
+--
+
+SELECT pg_catalog.setval('contact_sequence', 45001, true);
+
+
+--
+-- Name: contact; Type: TABLE; Schema: public; Owner: nsykes; Tablespace: 
+--
+
+CREATE TABLE contact (
+    id integer DEFAULT nextval('contact_sequence'::regclass) NOT NULL,
+    type character(1) NOT NULL,
+    CONSTRAINT ck_contact_type CHECK ((type = ANY (ARRAY['A'::bpchar, 'E'::bpchar, 'T'::bpchar])))
+);
+
+
+ALTER TABLE public.contact OWNER TO nsykes;
+
+--
+-- Name: email; Type: TABLE; Schema: public; Owner: nsykes; Tablespace: 
+--
+
+CREATE TABLE email (
+    contact_id integer NOT NULL,
+    address character varying(100) NOT NULL,
+    type character(1) NOT NULL,
+    CONSTRAINT ck_email_type CHECK ((type = ANY (ARRAY['B'::bpchar, 'H'::bpchar])))
+);
+
+
+ALTER TABLE public.email OWNER TO nsykes;
+
+--
+-- Name: party_sequence; Type: SEQUENCE; Schema: public; Owner: nsykes
+--
+
+CREATE SEQUENCE party_sequence
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.party_sequence OWNER TO nsykes;
+
+--
+-- Name: party_sequence; Type: SEQUENCE SET; Schema: public; Owner: nsykes
+--
+
+SELECT pg_catalog.setval('party_sequence', 10001, true);
+
+
+--
+-- Name: party; Type: TABLE; Schema: public; Owner: nsykes; Tablespace: 
+--
+
+CREATE TABLE party (
+    id integer DEFAULT nextval('party_sequence'::regclass) NOT NULL,
+    type character(1) NOT NULL,
+    CONSTRAINT ck_party_type CHECK ((type = ANY (ARRAY['B'::bpchar, 'P'::bpchar])))
+);
+
+
+ALTER TABLE public.party OWNER TO nsykes;
+
+--
+-- Name: party_contact; Type: TABLE; Schema: public; Owner: nsykes; Tablespace: 
+--
+
+CREATE TABLE party_contact (
+    party_id integer NOT NULL,
+    contact_id integer NOT NULL,
+    valid_from date NOT NULL,
+    valid_until date DEFAULT '3000-01-01'::date NOT NULL,
+    CONSTRAINT ck_party_contact_valid_order CHECK ((valid_from <= valid_until))
+);
+
+
+ALTER TABLE public.party_contact OWNER TO nsykes;
+
+--
+-- Name: person; Type: TABLE; Schema: public; Owner: nsykes; Tablespace: 
+--
+
+CREATE TABLE person (
+    party_id integer NOT NULL,
+    first_name character varying(30) NOT NULL,
+    last_name character varying(30) NOT NULL,
+    date_of_birth date NOT NULL,
+    full_name character varying(70)
+);
+
+
+ALTER TABLE public.person OWNER TO nsykes;
+
+--
+-- Name: telephone; Type: TABLE; Schema: public; Owner: nsykes; Tablespace: 
+--
+
+CREATE TABLE telephone (
+    contact_id integer NOT NULL,
+    number character varying(50) NOT NULL,
+    type character(1) NOT NULL,
+    CONSTRAINT ck_telephone_type CHECK ((type = ANY (ARRAY['B'::bpchar, 'H'::bpchar, 'M'::bpchar])))
+);
+
+
+ALTER TABLE public.telephone OWNER TO nsykes;
+
+--
+-- Data for Name: address; Type: TABLE DATA; Schema: public; Owner: nsykes
+--
+
+COPY address (contact_id, street, town, county, post_code, full_address) FROM stdin;
+1	Ap #241-3846 Lorem Street	Waltham	Berwickshire	H2 3JA	Ap #241-3846 Lorem Street Waltham Berwickshire H2 3JA
+2	4754 Consequat Road	Pullman	West Lothian	LX7B 6IF	4754 Consequat Road Pullman West Lothian LX7B 6IF
+3	P.O. Box 694, 7139 Vulputate, St.	Pasadena	Sark	QK44 4BY	P.O. Box 694, 7139 Vulputate, St. Pasadena Sark QK44 4BY
+4	8214 Vel, Road	DeKalb	Western Isles	OY70 8IX	8214 Vel, Road DeKalb Western Isles OY70 8IX
+5	Ap #951-8262 Hendrerit. Ave	Basin	Rutland	U6N 4KE	Ap #951-8262 Hendrerit. Ave Basin Rutland U6N 4KE
+6	P.O. Box 201, 9232 Curae; St.	Shawnee	Peebles-shire	U7J 6XJ	P.O. Box 201, 9232 Curae; St. Shawnee Peebles-shire U7J 6XJ
+7	P.O. Box 924, 7952 Nec Rd.	Haverhill	Co. Tipperary	MX91 1ZO	P.O. Box 924, 7952 Nec Rd. Haverhill Co. Tipperary MX91 1ZO
+8	Ap #885-9326 Feugiat Av.	Holyoke	West Riding of Yorkshire	XU7P 0YG	Ap #885-9326 Feugiat Av. Holyoke West Riding of Yorkshire XU7P 0YG
+9	Ap #760-380 A Rd.	Dickinson	Midlothian	NI12 7ER	Ap #760-380 A Rd. Dickinson Midlothian NI12 7ER
+10	444-4449 Sed Rd.	Palos Verdes Estates	Morayshire	MO3R 6YZ	444-4449 Sed Rd. Palos Verdes Estates Morayshire MO3R 6YZ
+11	2850 Tristique Ave	Fullerton	Co. Donegal	T91 3SR	2850 Tristique Ave Fullerton Co. Donegal T91 3SR
+12	Ap #144-5704 Morbi Street	Slidell	Sussex	WF1M 6CB	Ap #144-5704 Morbi Street Slidell Sussex WF1M 6CB
+13	763-8085 Laoreet, St.	Deadwood	Co. Fermanagh	ZU03 7OW	763-8085 Laoreet, St. Deadwood Co. Fermanagh ZU03 7OW
+14	P.O. Box 200, 5813 Sed St.	Phenix City	Staffordshire	IS4O 4ZW	P.O. Box 200, 5813 Sed St. Phenix City Staffordshire IS4O 4ZW
+15	3146 Nunc Av.	Edina	Avon	AD16 2YA	3146 Nunc Av. Edina Avon AD16 2YA
+16	Ap #623-4843 Amet, Rd.	Montpelier	Dyfed	II89 8QV	Ap #623-4843 Amet, Rd. Montpelier Dyfed II89 8QV
+17	Ap #339-5847 Orci. Road	Scottsbluff	Caithness	M5U 7YI	Ap #339-5847 Orci. Road Scottsbluff Caithness M5U 7YI
+18	5926 Sit Ave	Enid	Co. Donegal	F4T 2YC	5926 Sit Ave Enid Co. Donegal F4T 2YC
+19	578-4730 Aliquet. St.	Starkville	Co. Mayo	S6 4KD	578-4730 Aliquet. St. Starkville Co. Mayo S6 4KD
+20	464-7694 Ut, Rd.	Fairfield	Wiltshire	FC65 5NR	464-7694 Ut, Rd. Fairfield Wiltshire FC65 5NR
+21	964-887 Ac Rd.	Oxford	Glamorgan	BA40 5XT	964-887 Ac Rd. Oxford Glamorgan BA40 5XT
+22	556 Ut, Rd.	Ypsilanti	Co. Antrim	F0P 8SA	556 Ut, Rd. Ypsilanti Co. Antrim F0P 8SA
+23	667 Sit Street	Galesburg	Co. Galway	G7 0ET	667 Sit Street Galesburg Co. Galway G7 0ET
+24	7971 Leo. Rd.	Enfield	Powys	JZ0 8ZI	7971 Leo. Rd. Enfield Powys JZ0 8ZI
+25	P.O. Box 344, 1018 Sed St.	Norwalk	Kirkcudbrightshire	L46 8KD	P.O. Box 344, 1018 Sed St. Norwalk Kirkcudbrightshire L46 8KD
+26	Ap #293-3042 Nunc Av.	Moraga	Co. Wexford	ZL13 5AE	Ap #293-3042 Nunc Av. Moraga Co. Wexford ZL13 5AE
+27	1159 Eget Ave	Danville	Northumberland	GP4K 9HZ	1159 Eget Ave Danville Northumberland GP4K 9HZ
+28	5798 Semper, St.	Monongahela	Co. Kilkenny	JA8I 7SW	5798 Semper, St. Monongahela Co. Kilkenny JA8I 7SW
+29	P.O. Box 356, 9080 Eu St.	Vacaville	Yorkshire	T2O 1LV	P.O. Box 356, 9080 Eu St. Vacaville Yorkshire T2O 1LV
+30	652-6936 Ac Rd.	Covina	Kincardineshire	V45 2VQ	652-6936 Ac Rd. Covina Kincardineshire V45 2VQ
+31	Ap #913-5267 Semper St.	Enid	Anglesey	JK4 7KV	Ap #913-5267 Semper St. Enid Anglesey JK4 7KV
+32	2139 Pede Avenue	Lufkin	Westmorland	YA6 4ZJ	2139 Pede Avenue Lufkin Westmorland YA6 4ZJ
+33	362-9915 Donec Rd.	Scranton	Co. Louth	L63 0UP	362-9915 Donec Rd. Scranton Co. Louth L63 0UP
+34	678-7763 Vulputate, Rd.	Klamath Falls	Co. Tipperary	PW8F 8YK	678-7763 Vulputate, Rd. Klamath Falls Co. Tipperary PW8F 8YK
+35	8108 Sed Street	Waycross	Staffordshire	A55 2VE	8108 Sed Street Waycross Staffordshire A55 2VE
+36	Ap #243-9173 Nec Av.	Sheridan	Nairn	NR90 0XD	Ap #243-9173 Nec Av. Sheridan Nairn NR90 0XD
+37	Ap #611-5291 Pede. Rd.	Hot Springs	Denbighshire	O1 0HQ	Ap #611-5291 Pede. Rd. Hot Springs Denbighshire O1 0HQ
+38	P.O. Box 139, 1392 Ultricies Rd.	Chesapeake	Cornwall	RT89 9MT	P.O. Box 139, 1392 Ultricies Rd. Chesapeake Cornwall RT89 9MT
+39	212-4990 Sodales Rd.	Peabody	Middlesex	R6 5TX	212-4990 Sodales Rd. Peabody Middlesex R6 5TX
+40	P.O. Box 489, 107 Vulputate Rd.	Staunton	London	PS5P 5PG	P.O. Box 489, 107 Vulputate Rd. Staunton London PS5P 5PG
+41	819-9363 Lobortis Avenue	Hollister	Mid Glamorgan	K5W 1GE	819-9363 Lobortis Avenue Hollister Mid Glamorgan K5W 1GE
+42	P.O. Box 268, 8790 Egestas. Street	Hermosa Beach	Isle of Wight	C1E 8AE	P.O. Box 268, 8790 Egestas. Street Hermosa Beach Isle of Wight C1E 8AE
+43	5686 Nascetur Ave	Thousand Oaks	Essex	M80 6YV	5686 Nascetur Ave Thousand Oaks Essex M80 6YV
+44	9931 At Street	Miami	Renfrewshire	WJ4 6KK	9931 At Street Miami Renfrewshire WJ4 6KK
+45	Ap #791-1446 Nisi. Av.	Chester	Flintshire	WY55 5EN	Ap #791-1446 Nisi. Av. Chester Flintshire WY55 5EN
+46	4343 Dolor Rd.	Easton	Montgomeryshire	PK8 9AF	4343 Dolor Rd. Easton Montgomeryshire PK8 9AF
+47	581-3710 Quis Road	Rancho Palos Verdes	Co. Galway	X0 7MI	581-3710 Quis Road Rancho Palos Verdes Co. Galway X0 7MI
+48	508-9979 Eros. St.	Shawnee	Cornwall	ZZ0 6NG	508-9979 Eros. St. Shawnee Cornwall ZZ0 6NG
+49	Ap #578-2494 Lorem, Ave	Paramount	Perth	A93 3EX	Ap #578-2494 Lorem, Ave Paramount Perth A93 3EX
+50	8308 Faucibus Rd.	Valparaiso	Co. Cavan	TL5O 2AK	8308 Faucibus Rd. Valparaiso Co. Cavan TL5O 2AK
+5001	P.O. Box 466, 6127 Non, Rd.	Frederiksted	Co. Longford	H1 7BY	P.O. Box 466, 6127 Non, Rd. Frederiksted Co. Longford H1 7BY
+5002	P.O. Box 622, 2638 Ac Av.	Greenfield	Anglesey	P4I 3KP	P.O. Box 622, 2638 Ac Av. Greenfield Anglesey P4I 3KP
+5003	273-2036 Fermentum Ave	Dubuque	Selkirkshire	AE4 5RN	273-2036 Fermentum Ave Dubuque Selkirkshire AE4 5RN
+5004	236-9092 Nascetur Street	Meriden	Cumbria	UN7H 6ID	236-9092 Nascetur Street Meriden Cumbria UN7H 6ID
+5005	417-1065 Egestas Road	Elmira	East Sussex	ES5 3ZX	417-1065 Egestas Road Elmira East Sussex ES5 3ZX
+5006	7243 Malesuada St.	Rolling Hills	Glamorgan	F4V 1YE	7243 Malesuada St. Rolling Hills Glamorgan F4V 1YE
+5007	Ap #765-903 Quam. Rd.	New Rochelle	West Lothian	M6K 1FS	Ap #765-903 Quam. Rd. New Rochelle West Lothian M6K 1FS
+5008	Ap #119-6083 Gravida St.	Monrovia	Kinross-shire	KR5U 0RK	Ap #119-6083 Gravida St. Monrovia Kinross-shire KR5U 0RK
+5009	477-5122 Faucibus Avenue	Parma	Breconshire	U8R 0OC	477-5122 Faucibus Avenue Parma Breconshire U8R 0OC
+5010	P.O. Box 821, 9452 Rhoncus. Rd.	Greensburg	Co. Meath	J1 7NC	P.O. Box 821, 9452 Rhoncus. Rd. Greensburg Co. Meath J1 7NC
+5011	Ap #209-8444 Ante, St.	Moscow	Radnorshire	SU28 5CO	Ap #209-8444 Ante, St. Moscow Radnorshire SU28 5CO
+5012	704-6052 Non, St.	Ashland	Kincardineshire	ZN4F 6DU	704-6052 Non, St. Ashland Kincardineshire ZN4F 6DU
+5013	6776 Suspendisse Street	Fairfax	Suffolk	VW74 5CC	6776 Suspendisse Street Fairfax Suffolk VW74 5CC
+5014	226-1899 Elit, St.	Beverly	Yorkshire	BP7 1CC	226-1899 Elit, St. Beverly Yorkshire BP7 1CC
+5015	Ap #726-7157 Dui. St.	Arlington	Rutland	KX77 5QK	Ap #726-7157 Dui. St. Arlington Rutland KX77 5QK
+5016	734-7155 Mollis Av.	Seaford	Midlothian	DX3 7RW	734-7155 Mollis Av. Seaford Midlothian DX3 7RW
+5017	Ap #703-7255 Nec, St.	Stanton	Shetland	H16 6GE	Ap #703-7255 Nec, St. Stanton Shetland H16 6GE
+5018	Ap #657-8967 Fusce Ave	Blacksburg	Westmorland	GX76 4CP	Ap #657-8967 Fusce Ave Blacksburg Westmorland GX76 4CP
+5019	Ap #705-4836 Interdum. Av.	Valparaiso	Middlesex	JF5 3OS	Ap #705-4836 Interdum. Av. Valparaiso Middlesex JF5 3OS
+5020	8649 Suscipit, Road	Asbury Park	Surrey	O70 2JX	8649 Suscipit, Road Asbury Park Surrey O70 2JX
+5021	3503 Aliquam Street	Minot	Cumbria	D7D 4SG	3503 Aliquam Street Minot Cumbria D7D 4SG
+5022	Ap #760-835 Et Ave	Rialto	Co. Tipperary	MD7E 8UD	Ap #760-835 Et Ave Rialto Co. Tipperary MD7E 8UD
+5023	9740 Metus. St.	Lake Forest	Gwynedd	Z96 1DG	9740 Metus. St. Lake Forest Gwynedd Z96 1DG
+5024	P.O. Box 406, 2947 Non St.	Rapid City	Flintshire	L6K 0RS	P.O. Box 406, 2947 Non St. Rapid City Flintshire L6K 0RS
+5025	Ap #635-8678 Donec Rd.	Chicago	Angus	EH6 9MG	Ap #635-8678 Donec Rd. Chicago Angus EH6 9MG
+5026	Ap #178-8901 Ut Street	Portsmouth	Co. Donegal	Q6U 0HE	Ap #178-8901 Ut Street Portsmouth Co. Donegal Q6U 0HE
+5027	Ap #665-8161 Dui Rd.	Scottsbluff	Dunbartonshire	SU6 2TW	Ap #665-8161 Dui Rd. Scottsbluff Dunbartonshire SU6 2TW
+5028	Ap #685-7882 Ante St.	Woodward	Gloucestershire	IM3 6BS	Ap #685-7882 Ante St. Woodward Gloucestershire IM3 6BS
+5029	119-6772 Bibendum. St.	Wichita	Co. Galway	F94 8EA	119-6772 Bibendum. St. Wichita Co. Galway F94 8EA
+5030	P.O. Box 812, 126 Et Ave	Brooklyn Park	Anglesey	EP5 3LQ	P.O. Box 812, 126 Et Ave Brooklyn Park Anglesey EP5 3LQ
+5031	P.O. Box 995, 466 Elit. Rd.	Boston	Cleveland	CJ11 1GD	P.O. Box 995, 466 Elit. Rd. Boston Cleveland CJ11 1GD
+5032	Ap #435-8009 Et Street	Rolling Hills	Powys	EC5I 4XG	Ap #435-8009 Et Street Rolling Hills Powys EC5I 4XG
+5033	9229 Et Av.	Princeton	Clackmannanshire	L17 7ZT	9229 Et Av. Princeton Clackmannanshire L17 7ZT
+5034	5752 Dictum Av.	Beacon	Grampian	T28 9DT	5752 Dictum Av. Beacon Grampian T28 9DT
+5035	P.O. Box 491, 1218 Dolor Av.	Charleston	Cornwall	M7 8BV	P.O. Box 491, 1218 Dolor Av. Charleston Cornwall M7 8BV
+5036	P.O. Box 469, 9870 Lacus. Ave	Colorado Springs	Co. Louth	NT6C 0OQ	P.O. Box 469, 9870 Lacus. Ave Colorado Springs Co. Louth NT6C 0OQ
+5037	P.O. Box 104, 1713 Semper Ave	Morgantown	Rutland	JI82 1TR	P.O. Box 104, 1713 Semper Ave Morgantown Rutland JI82 1TR
+5038	539-3394 Ipsum Rd.	Saipan	Somerset	Y6 5KB	539-3394 Ipsum Rd. Saipan Somerset Y6 5KB
+5039	267-757 Feugiat Av.	Jacksonville	Cleveland	K1 6SH	267-757 Feugiat Av. Jacksonville Cleveland K1 6SH
+5040	1400 Mauris. Rd.	Monroe	Worcestershire	MR4U 5RL	1400 Mauris. Rd. Monroe Worcestershire MR4U 5RL
+5041	P.O. Box 854, 3346 Malesuada St.	Newport	Co. Laois	L8F 8AU	P.O. Box 854, 3346 Malesuada St. Newport Co. Laois L8F 8AU
+5042	129-1630 Sem, Ave	Great Falls	Kirkcudbrightshire	AJ6 4EN	129-1630 Sem, Ave Great Falls Kirkcudbrightshire AJ6 4EN
+5043	5368 Magnis Ave	Duarte	East Lothian	AU4 7FC	5368 Magnis Ave Duarte East Lothian AU4 7FC
+5044	8595 Ornare Road	Albany	Tayside	RA44 1WT	8595 Ornare Road Albany Tayside RA44 1WT
+5045	P.O. Box 921, 7814 Sagittis Road	Richmond	Westmorland	C99 8IC	P.O. Box 921, 7814 Sagittis Road Richmond Westmorland C99 8IC
+5046	3705 Rhoncus Ave	Warner Robins	Ayrshire	GF1X 6FO	3705 Rhoncus Ave Warner Robins Ayrshire GF1X 6FO
+5047	2125 Enim, Av.	Trenton	Co. Clare	C2 6OV	2125 Enim, Av. Trenton Co. Clare C2 6OV
+5048	4739 Porttitor Ave	Cerritos	West Riding of Yorkshire	E80 5PX	4739 Porttitor Ave Cerritos West Riding of Yorkshire E80 5PX
+5049	574-4246 Amet, St.	Mission Viejo	Peebles-shire	UN8 7AD	574-4246 Amet, St. Mission Viejo Peebles-shire UN8 7AD
+5050	326-6903 Dolor. St.	Muncie	Ayrshire	G5O 0ND	326-6903 Dolor. St. Muncie Ayrshire G5O 0ND
+\.
+
+
+--
+-- Data for Name: business; Type: TABLE DATA; Schema: public; Owner: nsykes
+--
+
+COPY business (party_id, name) FROM stdin;
+5001	Bailey plc
+5002	Bullock Ltd
+5003	Savage Partnership
+5004	Hatfield plc
+5005	Macdonald & Co
+5006	Hines & Co
+5007	Christian plc
+5008	Hale Partnership
+5009	Moore plc
+5010	Phelps & Co
+5011	Sawyer & Co
+5012	Wood Partnership
+5013	Walsh & Co
+5014	Dalton plc
+5015	Moon & Co
+5016	Peterson & Co
+5017	Dawson Partnership
+5018	Campos Ltd
+5019	Andrews & Co
+5020	Cortez plc
+5021	Huber Partnership
+5022	Finch Ltd
+5023	Pugh Partnership
+5024	Cantrell & Co
+5025	Wilkins Ltd
+5026	Delacruz plc
+5027	Morales Partnership
+5028	Marshall Partnership
+5029	Walter plc
+5030	Morris Partnership
+5031	Hurst & Co
+5032	Stark plc
+5033	Burton Partnership
+5034	Gonzales plc
+5035	Kelley Ltd
+5036	Weiss & Co
+5037	Hanson Ltd
+5038	Beck Ltd
+5039	Tanner Ltd
+5040	Rasmussen Partnership
+5041	Higgins Partnership
+5042	England plc
+5043	Gonzales Partnership
+5044	Scott plc
+5045	Burris plc
+5046	Hall plc
+5047	Morris Ltd
+5048	Mcclure plc
+5049	Peterson Ltd
+5050	Bell Partnership
+\.
+
+
+--
+-- Data for Name: contact; Type: TABLE DATA; Schema: public; Owner: nsykes
+--
+
+COPY contact (id, type) FROM stdin;
+1	A
+2	A
+3	A
+4	A
+5	A
+6	A
+7	A
+8	A
+9	A
+10	A
+11	A
+12	A
+13	A
+14	A
+15	A
+16	A
+17	A
+18	A
+19	A
+20	A
+21	A
+22	A
+23	A
+24	A
+25	A
+26	A
+27	A
+28	A
+29	A
+30	A
+31	A
+32	A
+33	A
+34	A
+35	A
+36	A
+37	A
+38	A
+39	A
+40	A
+41	A
+42	A
+43	A
+44	A
+45	A
+46	A
+47	A
+48	A
+49	A
+50	A
+5001	A
+5002	A
+5003	A
+5004	A
+5005	A
+5006	A
+5007	A
+5008	A
+5009	A
+5010	A
+5011	A
+5012	A
+5013	A
+5014	A
+5015	A
+5016	A
+5017	A
+5018	A
+5019	A
+5020	A
+5021	A
+5022	A
+5023	A
+5024	A
+5025	A
+5026	A
+5027	A
+5028	A
+5029	A
+5030	A
+5031	A
+5032	A
+5033	A
+5034	A
+5035	A
+5036	A
+5037	A
+5038	A
+5039	A
+5040	A
+5041	A
+5042	A
+5043	A
+5044	A
+5045	A
+5046	A
+5047	A
+5048	A
+5049	A
+5050	A
+10001	T
+10002	T
+10003	T
+10004	T
+10005	T
+10006	T
+10007	T
+10008	T
+10009	T
+10010	T
+10011	T
+10012	T
+10013	T
+10014	T
+10015	T
+10016	T
+10017	T
+10018	T
+10019	T
+10020	T
+10021	T
+10022	T
+10023	T
+10024	T
+10025	T
+10026	T
+10027	T
+10028	T
+10029	T
+10030	T
+10031	T
+10032	T
+10033	T
+10034	T
+10035	T
+10036	T
+10037	T
+10038	T
+10039	T
+10040	T
+10041	T
+10042	T
+10043	T
+10044	T
+10045	T
+10046	T
+10047	T
+10048	T
+10049	T
+10050	T
+15001	T
+15002	T
+15003	T
+15004	T
+15005	T
+15006	T
+15007	T
+15008	T
+15009	T
+15010	T
+15011	T
+15012	T
+15013	T
+15014	T
+15015	T
+15016	T
+15017	T
+15018	T
+15019	T
+15020	T
+15021	T
+15022	T
+15023	T
+15024	T
+15025	T
+15026	T
+15027	T
+15028	T
+15029	T
+15030	T
+15031	T
+15032	T
+15033	T
+15034	T
+15035	T
+15036	T
+15037	T
+15038	T
+15039	T
+15040	T
+15041	T
+15042	T
+15043	T
+15044	T
+15045	T
+15046	T
+15047	T
+15048	T
+15049	T
+15050	T
+20001	T
+20002	T
+20003	T
+20004	T
+20005	T
+20006	T
+20007	T
+20008	T
+20009	T
+20010	T
+20011	T
+20012	T
+20013	T
+20014	T
+20015	T
+20016	T
+20017	T
+20018	T
+20019	T
+20020	T
+20021	T
+20022	T
+20023	T
+20024	T
+20025	T
+20026	T
+20027	T
+20028	T
+20029	T
+20030	T
+20031	T
+20032	T
+20033	T
+20034	T
+20035	T
+20036	T
+20037	T
+20038	T
+20039	T
+20040	T
+20041	T
+20042	T
+20043	T
+20044	T
+20045	T
+20046	T
+20047	T
+20048	T
+20049	T
+20050	T
+25001	E
+25002	E
+25003	E
+25004	E
+25005	E
+25006	E
+25007	E
+25008	E
+25009	E
+25010	E
+25011	E
+25012	E
+25013	E
+25014	E
+25015	E
+25016	E
+25017	E
+25018	E
+25019	E
+25020	E
+25021	E
+25022	E
+25023	E
+25024	E
+25025	E
+25026	E
+25027	E
+25028	E
+25029	E
+25030	E
+25031	E
+25032	E
+25033	E
+25034	E
+25035	E
+25036	E
+25037	E
+25038	E
+25039	E
+25040	E
+25041	E
+25042	E
+25043	E
+25044	E
+25045	E
+25046	E
+25047	E
+25048	E
+25049	E
+25050	E
+30001	E
+30002	E
+30003	E
+30004	E
+30005	E
+30006	E
+30007	E
+30008	E
+30009	E
+30010	E
+30011	E
+30012	E
+30013	E
+30014	E
+30015	E
+30016	E
+30017	E
+30018	E
+30019	E
+30020	E
+30021	E
+30022	E
+30023	E
+30024	E
+30025	E
+30026	E
+30027	E
+30028	E
+30029	E
+30030	E
+30031	E
+30032	E
+30033	E
+30034	E
+30035	E
+30036	E
+30037	E
+30038	E
+30039	E
+30040	E
+30041	E
+30042	E
+30043	E
+30044	E
+30045	E
+30046	E
+30047	E
+30048	E
+30049	E
+30050	E
+35001	T
+35002	T
+35003	T
+35004	T
+35005	T
+35006	T
+35007	T
+35008	T
+35009	T
+35010	T
+35011	T
+35012	T
+35013	T
+35014	T
+35015	T
+35016	T
+35017	T
+35018	T
+35019	T
+35020	T
+35021	T
+35022	T
+35023	T
+35024	T
+35025	T
+35026	T
+35027	T
+35028	T
+35029	T
+35030	T
+35031	T
+35032	T
+35033	T
+35034	T
+35035	T
+35036	T
+35037	T
+35038	T
+35039	T
+35040	T
+35041	T
+35042	T
+35043	T
+35044	T
+35045	T
+35046	T
+35047	T
+35048	T
+35049	T
+35050	T
+40001	E
+40002	E
+40003	E
+40004	E
+40005	E
+40006	E
+40007	E
+40008	E
+40009	E
+40010	E
+40011	E
+40012	E
+40013	E
+40014	E
+40015	E
+40016	E
+40017	E
+40018	E
+40019	E
+40020	E
+40021	E
+40022	E
+40023	E
+40024	E
+40025	E
+40026	E
+40027	E
+40028	E
+40029	E
+40030	E
+40031	E
+40032	E
+40033	E
+40034	E
+40035	E
+40036	E
+40037	E
+40038	E
+40039	E
+40040	E
+40041	E
+40042	E
+40043	E
+40044	E
+40045	E
+40046	E
+40047	E
+40048	E
+40049	E
+40050	E
+\.
+
+
+--
+-- Data for Name: email; Type: TABLE DATA; Schema: public; Owner: nsykes
+--
+
+COPY email (contact_id, address, type) FROM stdin;
+25001	arcu.Nunc@Uttincidunt.ca	H
+25002	iaculis.aliquet.diam@consectetuer.ca	H
+25003	nec.urna@tempus.ca	H
+25004	ultrices.posuere.cubilia@vitaenibhDonec.edu	H
+25005	nunc.In.at@Integertincidunt.org	H
+25006	nisl@eratvolutpatNulla.ca	H
+25007	Duis.at@mollis.ca	H
+25008	sapien.imperdiet@tinciduntcongue.edu	H
+25009	gravida.non@luctus.edu	H
+25010	gravida@necligulaconsectetuer.org	H
+25011	amet@Naminterdumenim.edu	H
+25012	sed.dui@Utnec.ca	H
+25013	at.risus.Nunc@neceleifend.com	H
+25014	ipsum.primis@libero.ca	H
+25015	vitae.mauris.sit@egestasAliquamnec.ca	H
+25016	Phasellus.in.felis@felisorci.ca	H
+25017	lectus.convallis.est@nibhAliquamornare.edu	H
+25018	risus@orciDonec.com	H
+25019	luctus.et@sed.org	H
+25020	et@ullamcorperDuisat.ca	H
+25021	mi@adipiscingelitAliquam.edu	H
+25022	orci.tincidunt.adipiscing@liberoProin.org	H
+25023	interdum.feugiat@at.org	H
+25024	sit.amet@uteros.org	H
+25025	diam@euenimEtiam.com	H
+25026	pharetra.Quisque@Sedneque.org	H
+25027	In.faucibus@acfermentumvel.com	H
+25028	vehicula.aliquet.libero@euismodetcommodo.ca	H
+25029	Proin@urnaet.org	H
+25030	vulputate.eu@massaSuspendisse.edu	H
+25031	Suspendisse.non.leo@in.com	H
+25032	cubilia.Curae;@dolorsitamet.org	H
+25033	dictum@ultriciessemmagna.edu	H
+25034	Mauris@torquent.org	H
+25035	vulputate.eu.odio@sitamet.edu	H
+25036	sem.magna@quis.org	H
+25037	Nunc@famesacturpis.edu	H
+25038	Vestibulum.accumsan@nulla.org	H
+25039	velit.Sed@arcu.com	H
+25040	luctus.Curabitur.egestas@metussitamet.edu	H
+25041	quis.pede@DonecfringillaDonec.edu	H
+25042	Aliquam@sedorci.com	H
+25043	nunc.id.enim@accumsaninterdumlibero.org	H
+25044	aliquam.enim@tortor.ca	H
+25045	auctor.quis@feliseget.com	H
+25046	libero.Integer.in@Nullatemporaugue.com	H
+25047	metus@mattissemper.com	H
+25048	Integer.id.magna@morbitristique.org	H
+25049	consequat.auctor.nunc@semperegestasurna.ca	H
+25050	justo@maurisInteger.org	H
+30001	egestas.Duis.ac@idantedictum.org	B
+30002	massa.Integer.vitae@Donecconsectetuer.ca	B
+30003	nisl@mattisInteger.ca	B
+30004	ligula.Nullam@posuere.org	B
+30005	arcu@at.ca	B
+30006	egestas.rhoncus.Proin@eget.edu	B
+30007	aliquet.metus.urna@malesuadaIntegerid.ca	B
+30008	congue@fringilla.org	B
+30009	erat@MorbivehiculaPellentesque.ca	B
+30010	sociis.natoque.penatibus@nonummyultriciesornare.edu	B
+30011	vel.mauris.Integer@Morbi.edu	B
+30012	non.lorem.vitae@In.edu	B
+30013	Curabitur.vel.lectus@musProinvel.ca	B
+30014	non.feugiat@Nulla.ca	B
+30015	dolor.tempus@etultricesposuere.edu	B
+30016	ullamcorper.magna@portaelit.edu	B
+30017	sit.amet@convallis.edu	B
+30018	aliquet@ac.com	B
+30019	massa.lobortis.ultrices@eu.com	B
+30020	ac.fermentum@sapien.org	B
+30021	Aenean@magna.ca	B
+30022	dapibus@aliquetPhasellus.edu	B
+30023	convallis@nunc.ca	B
+30024	nonummy.Fusce.fermentum@massaMaurisvestibulum.org	B
+30025	per.inceptos@porttitorinterdum.org	B
+30026	vitae.velit.egestas@scelerisquescelerisque.org	B
+30027	tortor@Cras.com	B
+30028	Praesent@dapibus.ca	B
+30029	velit.Sed.malesuada@Cras.org	B
+30030	lobortis.quis@viverraMaecenas.edu	B
+30031	pellentesque@etnetus.ca	B
+30032	Mauris.quis.turpis@lectus.edu	B
+30033	mattis@felisorci.edu	B
+30034	magnis.dis@Vestibulumanteipsum.org	B
+30035	vulputate.lacus.Cras@ametornare.com	B
+30036	Nulla.dignissim@anunc.ca	B
+30037	dui.augue.eu@sollicitudinamalesuada.ca	B
+30038	molestie.tortor@rutrumnon.edu	B
+30039	In.mi.pede@nonummyac.ca	B
+30040	dis.parturient@ligula.ca	B
+30041	pede@vulputate.org	B
+30042	eu@Phasellusdapibus.org	B
+30043	dolor@neceleifend.ca	B
+30044	ligula@Aliquam.ca	B
+30045	fringilla.euismod.enim@mollisduiin.com	B
+30046	laoreet@vitaerisusDuis.edu	B
+30047	euismod.et.commodo@fringilla.com	B
+30048	ultrices.Vivamus.rhoncus@quis.ca	B
+30049	sed.dictum@consectetuer.edu	B
+30050	sit.amet@acmieleifend.edu	B
+40001	eu.placerat@Pellentesquetincidunttempus.ca	B
+40002	magnis@duiCras.com	B
+40003	ac@mauris.ca	B
+40004	gravida@ornare.org	B
+40005	vel.nisl.Quisque@elitNulla.org	B
+40006	fermentum@feugiatnec.ca	B
+40007	nisi.Mauris.nulla@nisia.org	B
+40008	vitae.posuere@liberoIntegerin.edu	B
+40009	interdum@tempordiamdictum.org	B
+40010	enim.consequat.purus@ornareelitelit.org	B
+40011	luctus.et@rhoncus.org	B
+40012	montes.nascetur@montes.ca	B
+40013	sed@enimsit.ca	B
+40014	pede.ultrices.a@velconvallis.org	B
+40015	et@blanditatnisi.com	B
+40016	Nullam@Sed.com	B
+40017	convallis@Duismi.ca	B
+40018	Vivamus.nibh@odio.com	B
+40019	malesuada.Integer.id@magnaaneque.org	B
+40020	elit.Aliquam@Integer.ca	B
+40021	Curabitur.vel@etpedeNunc.ca	B
+40022	sagittis@Inat.com	B
+40023	justo.Proin.non@eu.org	B
+40024	risus.Duis@facilisis.org	B
+40025	varius.orci@tinciduntneque.edu	B
+40026	rutrum@mollisvitaeposuere.org	B
+40027	nisi.Mauris.nulla@Nullaaliquet.org	B
+40028	lacinia.at@imperdiet.ca	B
+40029	feugiat.metus.sit@accumsansedfacilisis.com	B
+40030	enim.Nunc.ut@IntegermollisInteger.ca	B
+40031	Aenean.massa@estMauris.ca	B
+40032	purus@ametfaucibusut.ca	B
+40033	dolor@mollisduiin.com	B
+40034	magna.Praesent.interdum@auctor.org	B
+40035	ligula@mi.org	B
+40036	Vestibulum@mitemporlorem.com	B
+40037	lobortis.mauris@facilisiseget.ca	B
+40038	eros.nec.tellus@condimentum.edu	B
+40039	ultricies@et.org	B
+40040	massa@augue.com	B
+40041	vel@Duisvolutpatnunc.com	B
+40042	ut.nulla.Cras@nequetellus.ca	B
+40043	sem.vitae.aliquam@Nunclectus.org	B
+40044	nisi.nibh.lacinia@Aeneanmassa.ca	B
+40045	tempor.bibendum@pede.ca	B
+40046	faucibus.leo@urnasuscipitnonummy.edu	B
+40047	Donec.luctus@vehicularisusNulla.com	B
+40048	nec.leo@adipiscingMauris.ca	B
+40049	nunc.nulla.vulputate@arcuVestibulumut.com	B
+40050	cursus.in@quisaccumsan.ca	B
+\.
+
+
+--
+-- Data for Name: party; Type: TABLE DATA; Schema: public; Owner: nsykes
+--
+
+COPY party (id, type) FROM stdin;
+1	P
+2	P
+3	P
+4	P
+5	P
+6	P
+7	P
+8	P
+9	P
+10	P
+11	P
+12	P
+13	P
+14	P
+15	P
+16	P
+17	P
+18	P
+19	P
+20	P
+21	P
+22	P
+23	P
+24	P
+25	P
+26	P
+27	P
+28	P
+29	P
+30	P
+31	P
+32	P
+33	P
+34	P
+35	P
+36	P
+37	P
+38	P
+39	P
+40	P
+41	P
+42	P
+43	P
+44	P
+45	P
+46	P
+47	P
+48	P
+49	P
+50	P
+5001	B
+5002	B
+5003	B
+5004	B
+5005	B
+5006	B
+5007	B
+5008	B
+5009	B
+5010	B
+5011	B
+5012	B
+5013	B
+5014	B
+5015	B
+5016	B
+5017	B
+5018	B
+5019	B
+5020	B
+5021	B
+5022	B
+5023	B
+5024	B
+5025	B
+5026	B
+5027	B
+5028	B
+5029	B
+5030	B
+5031	B
+5032	B
+5033	B
+5034	B
+5035	B
+5036	B
+5037	B
+5038	B
+5039	B
+5040	B
+5041	B
+5042	B
+5043	B
+5044	B
+5045	B
+5046	B
+5047	B
+5048	B
+5049	B
+5050	B
+\.
+
+
+--
+-- Data for Name: party_contact; Type: TABLE DATA; Schema: public; Owner: nsykes
+--
+
+COPY party_contact (party_id, contact_id, valid_from, valid_until) FROM stdin;
+1	1	2000-01-01	3000-01-01
+1	10001	2000-01-01	3000-01-01
+1	15001	2000-01-01	3000-01-01
+1	20001	2000-01-01	3000-01-01
+1	25001	2000-01-01	3000-01-01
+1	30001	2000-01-01	3000-01-01
+2	2	2000-01-01	3000-01-01
+2	10002	2000-01-01	3000-01-01
+2	15002	2000-01-01	3000-01-01
+2	20002	2000-01-01	3000-01-01
+2	25002	2000-01-01	3000-01-01
+2	30002	2000-01-01	3000-01-01
+3	3	2000-01-01	3000-01-01
+3	10003	2000-01-01	3000-01-01
+3	15003	2000-01-01	3000-01-01
+3	20003	2000-01-01	3000-01-01
+3	25003	2000-01-01	3000-01-01
+3	30003	2000-01-01	3000-01-01
+4	4	2000-01-01	3000-01-01
+4	10004	2000-01-01	3000-01-01
+4	15004	2000-01-01	3000-01-01
+4	20004	2000-01-01	3000-01-01
+4	25004	2000-01-01	3000-01-01
+4	30004	2000-01-01	3000-01-01
+5	5	2000-01-01	3000-01-01
+5	10005	2000-01-01	3000-01-01
+5	15005	2000-01-01	3000-01-01
+5	20005	2000-01-01	3000-01-01
+5	25005	2000-01-01	3000-01-01
+5	30005	2000-01-01	3000-01-01
+6	6	2000-01-01	3000-01-01
+6	10006	2000-01-01	3000-01-01
+6	15006	2000-01-01	3000-01-01
+6	20006	2000-01-01	3000-01-01
+6	25006	2000-01-01	3000-01-01
+6	30006	2000-01-01	3000-01-01
+7	7	2000-01-01	3000-01-01
+7	10007	2000-01-01	3000-01-01
+7	15007	2000-01-01	3000-01-01
+7	20007	2000-01-01	3000-01-01
+7	25007	2000-01-01	3000-01-01
+7	30007	2000-01-01	3000-01-01
+8	8	2000-01-01	3000-01-01
+8	10008	2000-01-01	3000-01-01
+8	15008	2000-01-01	3000-01-01
+8	20008	2000-01-01	3000-01-01
+8	25008	2000-01-01	3000-01-01
+8	30008	2000-01-01	3000-01-01
+9	9	2000-01-01	3000-01-01
+9	10009	2000-01-01	3000-01-01
+9	15009	2000-01-01	3000-01-01
+9	20009	2000-01-01	3000-01-01
+9	25009	2000-01-01	3000-01-01
+9	30009	2000-01-01	3000-01-01
+10	10	2000-01-01	3000-01-01
+10	10010	2000-01-01	3000-01-01
+10	15010	2000-01-01	3000-01-01
+10	20010	2000-01-01	3000-01-01
+10	25010	2000-01-01	3000-01-01
+10	30010	2000-01-01	3000-01-01
+11	11	2000-01-01	3000-01-01
+11	10011	2000-01-01	3000-01-01
+11	15011	2000-01-01	3000-01-01
+11	20011	2000-01-01	3000-01-01
+11	25011	2000-01-01	3000-01-01
+11	30011	2000-01-01	3000-01-01
+12	12	2000-01-01	3000-01-01
+12	10012	2000-01-01	3000-01-01
+12	15012	2000-01-01	3000-01-01
+12	20012	2000-01-01	3000-01-01
+12	25012	2000-01-01	3000-01-01
+12	30012	2000-01-01	3000-01-01
+13	13	2000-01-01	3000-01-01
+13	10013	2000-01-01	3000-01-01
+13	15013	2000-01-01	3000-01-01
+13	20013	2000-01-01	3000-01-01
+13	25013	2000-01-01	3000-01-01
+13	30013	2000-01-01	3000-01-01
+14	14	2000-01-01	3000-01-01
+14	10014	2000-01-01	3000-01-01
+14	15014	2000-01-01	3000-01-01
+14	20014	2000-01-01	3000-01-01
+14	25014	2000-01-01	3000-01-01
+14	30014	2000-01-01	3000-01-01
+15	15	2000-01-01	3000-01-01
+15	10015	2000-01-01	3000-01-01
+15	15015	2000-01-01	3000-01-01
+15	20015	2000-01-01	3000-01-01
+15	25015	2000-01-01	3000-01-01
+15	30015	2000-01-01	3000-01-01
+16	16	2000-01-01	3000-01-01
+16	10016	2000-01-01	3000-01-01
+16	15016	2000-01-01	3000-01-01
+16	20016	2000-01-01	3000-01-01
+16	25016	2000-01-01	3000-01-01
+16	30016	2000-01-01	3000-01-01
+17	17	2000-01-01	3000-01-01
+17	10017	2000-01-01	3000-01-01
+17	15017	2000-01-01	3000-01-01
+17	20017	2000-01-01	3000-01-01
+17	25017	2000-01-01	3000-01-01
+17	30017	2000-01-01	3000-01-01
+18	18	2000-01-01	3000-01-01
+18	10018	2000-01-01	3000-01-01
+18	15018	2000-01-01	3000-01-01
+18	20018	2000-01-01	3000-01-01
+18	25018	2000-01-01	3000-01-01
+18	30018	2000-01-01	3000-01-01
+19	19	2000-01-01	3000-01-01
+19	10019	2000-01-01	3000-01-01
+19	15019	2000-01-01	3000-01-01
+19	20019	2000-01-01	3000-01-01
+19	25019	2000-01-01	3000-01-01
+19	30019	2000-01-01	3000-01-01
+20	20	2000-01-01	3000-01-01
+20	10020	2000-01-01	3000-01-01
+20	15020	2000-01-01	3000-01-01
+20	20020	2000-01-01	3000-01-01
+20	25020	2000-01-01	3000-01-01
+20	30020	2000-01-01	3000-01-01
+21	21	2000-01-01	3000-01-01
+21	10021	2000-01-01	3000-01-01
+21	15021	2000-01-01	3000-01-01
+21	20021	2000-01-01	3000-01-01
+21	25021	2000-01-01	3000-01-01
+21	30021	2000-01-01	3000-01-01
+22	22	2000-01-01	3000-01-01
+22	10022	2000-01-01	3000-01-01
+22	15022	2000-01-01	3000-01-01
+22	20022	2000-01-01	3000-01-01
+22	25022	2000-01-01	3000-01-01
+22	30022	2000-01-01	3000-01-01
+23	23	2000-01-01	3000-01-01
+23	10023	2000-01-01	3000-01-01
+23	15023	2000-01-01	3000-01-01
+23	20023	2000-01-01	3000-01-01
+23	25023	2000-01-01	3000-01-01
+23	30023	2000-01-01	3000-01-01
+24	24	2000-01-01	3000-01-01
+24	10024	2000-01-01	3000-01-01
+24	15024	2000-01-01	3000-01-01
+24	20024	2000-01-01	3000-01-01
+24	25024	2000-01-01	3000-01-01
+24	30024	2000-01-01	3000-01-01
+25	25	2000-01-01	3000-01-01
+25	10025	2000-01-01	3000-01-01
+25	15025	2000-01-01	3000-01-01
+25	20025	2000-01-01	3000-01-01
+25	25025	2000-01-01	3000-01-01
+25	30025	2000-01-01	3000-01-01
+26	26	2000-01-01	3000-01-01
+26	10026	2000-01-01	3000-01-01
+26	15026	2000-01-01	3000-01-01
+26	20026	2000-01-01	3000-01-01
+26	25026	2000-01-01	3000-01-01
+26	30026	2000-01-01	3000-01-01
+27	27	2000-01-01	3000-01-01
+27	10027	2000-01-01	3000-01-01
+27	15027	2000-01-01	3000-01-01
+27	20027	2000-01-01	3000-01-01
+27	25027	2000-01-01	3000-01-01
+27	30027	2000-01-01	3000-01-01
+28	28	2000-01-01	3000-01-01
+28	10028	2000-01-01	3000-01-01
+28	15028	2000-01-01	3000-01-01
+28	20028	2000-01-01	3000-01-01
+28	25028	2000-01-01	3000-01-01
+28	30028	2000-01-01	3000-01-01
+29	29	2000-01-01	3000-01-01
+29	10029	2000-01-01	3000-01-01
+29	15029	2000-01-01	3000-01-01
+29	20029	2000-01-01	3000-01-01
+29	25029	2000-01-01	3000-01-01
+29	30029	2000-01-01	3000-01-01
+30	30	2000-01-01	3000-01-01
+30	10030	2000-01-01	3000-01-01
+30	15030	2000-01-01	3000-01-01
+30	20030	2000-01-01	3000-01-01
+30	25030	2000-01-01	3000-01-01
+30	30030	2000-01-01	3000-01-01
+31	31	2000-01-01	3000-01-01
+31	10031	2000-01-01	3000-01-01
+31	15031	2000-01-01	3000-01-01
+31	20031	2000-01-01	3000-01-01
+31	25031	2000-01-01	3000-01-01
+31	30031	2000-01-01	3000-01-01
+32	32	2000-01-01	3000-01-01
+32	10032	2000-01-01	3000-01-01
+32	15032	2000-01-01	3000-01-01
+32	20032	2000-01-01	3000-01-01
+32	25032	2000-01-01	3000-01-01
+32	30032	2000-01-01	3000-01-01
+33	33	2000-01-01	3000-01-01
+33	10033	2000-01-01	3000-01-01
+33	15033	2000-01-01	3000-01-01
+33	20033	2000-01-01	3000-01-01
+33	25033	2000-01-01	3000-01-01
+33	30033	2000-01-01	3000-01-01
+34	34	2000-01-01	3000-01-01
+34	10034	2000-01-01	3000-01-01
+34	15034	2000-01-01	3000-01-01
+34	20034	2000-01-01	3000-01-01
+34	25034	2000-01-01	3000-01-01
+34	30034	2000-01-01	3000-01-01
+35	35	2000-01-01	3000-01-01
+35	10035	2000-01-01	3000-01-01
+35	15035	2000-01-01	3000-01-01
+35	20035	2000-01-01	3000-01-01
+35	25035	2000-01-01	3000-01-01
+35	30035	2000-01-01	3000-01-01
+36	36	2000-01-01	3000-01-01
+36	10036	2000-01-01	3000-01-01
+36	15036	2000-01-01	3000-01-01
+36	20036	2000-01-01	3000-01-01
+36	25036	2000-01-01	3000-01-01
+36	30036	2000-01-01	3000-01-01
+37	37	2000-01-01	3000-01-01
+37	10037	2000-01-01	3000-01-01
+37	15037	2000-01-01	3000-01-01
+37	20037	2000-01-01	3000-01-01
+37	25037	2000-01-01	3000-01-01
+37	30037	2000-01-01	3000-01-01
+38	38	2000-01-01	3000-01-01
+38	10038	2000-01-01	3000-01-01
+38	15038	2000-01-01	3000-01-01
+38	20038	2000-01-01	3000-01-01
+38	25038	2000-01-01	3000-01-01
+38	30038	2000-01-01	3000-01-01
+39	39	2000-01-01	3000-01-01
+39	10039	2000-01-01	3000-01-01
+39	15039	2000-01-01	3000-01-01
+39	20039	2000-01-01	3000-01-01
+39	25039	2000-01-01	3000-01-01
+39	30039	2000-01-01	3000-01-01
+40	40	2000-01-01	3000-01-01
+40	10040	2000-01-01	3000-01-01
+40	15040	2000-01-01	3000-01-01
+40	20040	2000-01-01	3000-01-01
+40	25040	2000-01-01	3000-01-01
+40	30040	2000-01-01	3000-01-01
+41	41	2000-01-01	3000-01-01
+41	10041	2000-01-01	3000-01-01
+41	15041	2000-01-01	3000-01-01
+41	20041	2000-01-01	3000-01-01
+41	25041	2000-01-01	3000-01-01
+41	30041	2000-01-01	3000-01-01
+42	42	2000-01-01	3000-01-01
+42	10042	2000-01-01	3000-01-01
+42	15042	2000-01-01	3000-01-01
+42	20042	2000-01-01	3000-01-01
+42	25042	2000-01-01	3000-01-01
+42	30042	2000-01-01	3000-01-01
+43	43	2000-01-01	3000-01-01
+43	10043	2000-01-01	3000-01-01
+43	15043	2000-01-01	3000-01-01
+43	20043	2000-01-01	3000-01-01
+43	25043	2000-01-01	3000-01-01
+43	30043	2000-01-01	3000-01-01
+44	44	2000-01-01	3000-01-01
+44	10044	2000-01-01	3000-01-01
+44	15044	2000-01-01	3000-01-01
+44	20044	2000-01-01	3000-01-01
+44	25044	2000-01-01	3000-01-01
+44	30044	2000-01-01	3000-01-01
+45	45	2000-01-01	3000-01-01
+45	10045	2000-01-01	3000-01-01
+45	15045	2000-01-01	3000-01-01
+45	20045	2000-01-01	3000-01-01
+45	25045	2000-01-01	3000-01-01
+45	30045	2000-01-01	3000-01-01
+46	46	2000-01-01	3000-01-01
+46	10046	2000-01-01	3000-01-01
+46	15046	2000-01-01	3000-01-01
+46	20046	2000-01-01	3000-01-01
+46	25046	2000-01-01	3000-01-01
+46	30046	2000-01-01	3000-01-01
+47	47	2000-01-01	3000-01-01
+47	10047	2000-01-01	3000-01-01
+47	15047	2000-01-01	3000-01-01
+47	20047	2000-01-01	3000-01-01
+47	25047	2000-01-01	3000-01-01
+47	30047	2000-01-01	3000-01-01
+48	48	2000-01-01	3000-01-01
+48	10048	2000-01-01	3000-01-01
+48	15048	2000-01-01	3000-01-01
+48	20048	2000-01-01	3000-01-01
+48	25048	2000-01-01	3000-01-01
+48	30048	2000-01-01	3000-01-01
+49	49	2000-01-01	3000-01-01
+49	10049	2000-01-01	3000-01-01
+49	15049	2000-01-01	3000-01-01
+49	20049	2000-01-01	3000-01-01
+49	25049	2000-01-01	3000-01-01
+49	30049	2000-01-01	3000-01-01
+50	50	2000-01-01	3000-01-01
+50	10050	2000-01-01	3000-01-01
+50	15050	2000-01-01	3000-01-01
+50	20050	2000-01-01	3000-01-01
+50	25050	2000-01-01	3000-01-01
+50	30050	2000-01-01	3000-01-01
+5001	5001	2000-01-01	3000-01-01
+5001	35001	2000-01-01	3000-01-01
+5001	40001	2000-01-01	3000-01-01
+5002	5002	2000-01-01	3000-01-01
+5002	35002	2000-01-01	3000-01-01
+5002	40002	2000-01-01	3000-01-01
+5003	5003	2000-01-01	3000-01-01
+5003	35003	2000-01-01	3000-01-01
+5003	40003	2000-01-01	3000-01-01
+5004	5004	2000-01-01	3000-01-01
+5004	35004	2000-01-01	3000-01-01
+5004	40004	2000-01-01	3000-01-01
+5005	5005	2000-01-01	3000-01-01
+5005	35005	2000-01-01	3000-01-01
+5005	40005	2000-01-01	3000-01-01
+5006	5006	2000-01-01	3000-01-01
+5006	35006	2000-01-01	3000-01-01
+5006	40006	2000-01-01	3000-01-01
+5007	5007	2000-01-01	3000-01-01
+5007	35007	2000-01-01	3000-01-01
+5007	40007	2000-01-01	3000-01-01
+5008	5008	2000-01-01	3000-01-01
+5008	35008	2000-01-01	3000-01-01
+5008	40008	2000-01-01	3000-01-01
+5009	5009	2000-01-01	3000-01-01
+5009	35009	2000-01-01	3000-01-01
+5009	40009	2000-01-01	3000-01-01
+5010	5010	2000-01-01	3000-01-01
+5010	35010	2000-01-01	3000-01-01
+5010	40010	2000-01-01	3000-01-01
+5011	5011	2000-01-01	3000-01-01
+5011	35011	2000-01-01	3000-01-01
+5011	40011	2000-01-01	3000-01-01
+5012	5012	2000-01-01	3000-01-01
+5012	35012	2000-01-01	3000-01-01
+5012	40012	2000-01-01	3000-01-01
+5013	5013	2000-01-01	3000-01-01
+5013	35013	2000-01-01	3000-01-01
+5013	40013	2000-01-01	3000-01-01
+5014	5014	2000-01-01	3000-01-01
+5014	35014	2000-01-01	3000-01-01
+5014	40014	2000-01-01	3000-01-01
+5015	5015	2000-01-01	3000-01-01
+5015	35015	2000-01-01	3000-01-01
+5015	40015	2000-01-01	3000-01-01
+5016	5016	2000-01-01	3000-01-01
+5016	35016	2000-01-01	3000-01-01
+5016	40016	2000-01-01	3000-01-01
+5017	5017	2000-01-01	3000-01-01
+5017	35017	2000-01-01	3000-01-01
+5017	40017	2000-01-01	3000-01-01
+5018	5018	2000-01-01	3000-01-01
+5018	35018	2000-01-01	3000-01-01
+5018	40018	2000-01-01	3000-01-01
+5019	5019	2000-01-01	3000-01-01
+5019	35019	2000-01-01	3000-01-01
+5019	40019	2000-01-01	3000-01-01
+5020	5020	2000-01-01	3000-01-01
+5020	35020	2000-01-01	3000-01-01
+5020	40020	2000-01-01	3000-01-01
+5021	5021	2000-01-01	3000-01-01
+5021	35021	2000-01-01	3000-01-01
+5021	40021	2000-01-01	3000-01-01
+5022	5022	2000-01-01	3000-01-01
+5022	35022	2000-01-01	3000-01-01
+5022	40022	2000-01-01	3000-01-01
+5023	5023	2000-01-01	3000-01-01
+5023	35023	2000-01-01	3000-01-01
+5023	40023	2000-01-01	3000-01-01
+5024	5024	2000-01-01	3000-01-01
+5024	35024	2000-01-01	3000-01-01
+5024	40024	2000-01-01	3000-01-01
+5025	5025	2000-01-01	3000-01-01
+5025	35025	2000-01-01	3000-01-01
+5025	40025	2000-01-01	3000-01-01
+5026	5026	2000-01-01	3000-01-01
+5026	35026	2000-01-01	3000-01-01
+5026	40026	2000-01-01	3000-01-01
+5027	5027	2000-01-01	3000-01-01
+5027	35027	2000-01-01	3000-01-01
+5027	40027	2000-01-01	3000-01-01
+5028	5028	2000-01-01	3000-01-01
+5028	35028	2000-01-01	3000-01-01
+5028	40028	2000-01-01	3000-01-01
+5029	5029	2000-01-01	3000-01-01
+5029	35029	2000-01-01	3000-01-01
+5029	40029	2000-01-01	3000-01-01
+5030	5030	2000-01-01	3000-01-01
+5030	35030	2000-01-01	3000-01-01
+5030	40030	2000-01-01	3000-01-01
+5031	5031	2000-01-01	3000-01-01
+5031	35031	2000-01-01	3000-01-01
+5031	40031	2000-01-01	3000-01-01
+5032	5032	2000-01-01	3000-01-01
+5032	35032	2000-01-01	3000-01-01
+5032	40032	2000-01-01	3000-01-01
+5033	5033	2000-01-01	3000-01-01
+5033	35033	2000-01-01	3000-01-01
+5033	40033	2000-01-01	3000-01-01
+5034	5034	2000-01-01	3000-01-01
+5034	35034	2000-01-01	3000-01-01
+5034	40034	2000-01-01	3000-01-01
+5035	5035	2000-01-01	3000-01-01
+5035	35035	2000-01-01	3000-01-01
+5035	40035	2000-01-01	3000-01-01
+5036	5036	2000-01-01	3000-01-01
+5036	35036	2000-01-01	3000-01-01
+5036	40036	2000-01-01	3000-01-01
+5037	5037	2000-01-01	3000-01-01
+5037	35037	2000-01-01	3000-01-01
+5037	40037	2000-01-01	3000-01-01
+5038	5038	2000-01-01	3000-01-01
+5038	35038	2000-01-01	3000-01-01
+5038	40038	2000-01-01	3000-01-01
+5039	5039	2000-01-01	3000-01-01
+5039	35039	2000-01-01	3000-01-01
+5039	40039	2000-01-01	3000-01-01
+5040	5040	2000-01-01	3000-01-01
+5040	35040	2000-01-01	3000-01-01
+5040	40040	2000-01-01	3000-01-01
+5041	5041	2000-01-01	3000-01-01
+5041	35041	2000-01-01	3000-01-01
+5041	40041	2000-01-01	3000-01-01
+5042	5042	2000-01-01	3000-01-01
+5042	35042	2000-01-01	3000-01-01
+5042	40042	2000-01-01	3000-01-01
+5043	5043	2000-01-01	3000-01-01
+5043	35043	2000-01-01	3000-01-01
+5043	40043	2000-01-01	3000-01-01
+5044	5044	2000-01-01	3000-01-01
+5044	35044	2000-01-01	3000-01-01
+5044	40044	2000-01-01	3000-01-01
+5045	5045	2000-01-01	3000-01-01
+5045	35045	2000-01-01	3000-01-01
+5045	40045	2000-01-01	3000-01-01
+5046	5046	2000-01-01	3000-01-01
+5046	35046	2000-01-01	3000-01-01
+5046	40046	2000-01-01	3000-01-01
+5047	5047	2000-01-01	3000-01-01
+5047	35047	2000-01-01	3000-01-01
+5047	40047	2000-01-01	3000-01-01
+5048	5048	2000-01-01	3000-01-01
+5048	35048	2000-01-01	3000-01-01
+5048	40048	2000-01-01	3000-01-01
+5049	5049	2000-01-01	3000-01-01
+5049	35049	2000-01-01	3000-01-01
+5049	40049	2000-01-01	3000-01-01
+5050	5050	2000-01-01	3000-01-01
+5050	35050	2000-01-01	3000-01-01
+5050	40050	2000-01-01	3000-01-01
+\.
+
+
+--
+-- Data for Name: person; Type: TABLE DATA; Schema: public; Owner: nsykes
+--
+
+COPY person (party_id, first_name, last_name, date_of_birth, full_name) FROM stdin;
+1	Quin	Patton	1977-08-01	Quin Patton
+2	Ria	Witt	1986-08-08	Ria Witt
+3	Melodie	Tran	1958-12-17	Melodie Tran
+4	Kirby	Allison	1957-01-02	Kirby Allison
+5	Lydia	Smith	1973-07-01	Lydia Smith
+6	Aline	Butler	1963-06-25	Aline Butler
+7	Ivan	Yang	1974-02-27	Ivan Yang
+8	Mufutau	Gordon	1968-12-13	Mufutau Gordon
+9	Bell	Rose	1954-05-05	Bell Rose
+10	Vaughan	Rose	1964-06-07	Vaughan Rose
+11	Ross	Small	1990-02-11	Ross Small
+12	Reese	Ellis	1956-08-08	Reese Ellis
+13	Magee	Mckenzie	1975-03-20	Magee Mckenzie
+14	Hop	William	1984-07-31	Hop William
+15	Briar	Wheeler	1974-09-10	Briar Wheeler
+16	Kiayada	Galloway	1987-10-02	Kiayada Galloway
+17	Steel	Watts	1947-01-30	Steel Watts
+18	Belle	Long	1958-02-19	Belle Long
+19	Alexis	Mcfarland	1979-07-15	Alexis Mcfarland
+20	Curran	Skinner	1956-12-27	Curran Skinner
+21	Bree	Mcdonald	1983-03-29	Bree Mcdonald
+22	Barclay	Chen	1983-02-21	Barclay Chen
+23	Declan	Kline	1986-11-10	Declan Kline
+24	Carlos	Kinney	1954-11-06	Carlos Kinney
+25	Inga	Bartlett	1974-08-02	Inga Bartlett
+26	Jessamine	Rice	1986-06-16	Jessamine Rice
+27	Tanisha	Brewer	1971-08-09	Tanisha Brewer
+28	Portia	Delacruz	1953-04-08	Portia Delacruz
+29	Jenna	Moody	1987-11-17	Jenna Moody
+30	Camden	Davis	1974-09-08	Camden Davis
+31	Sean	Noel	1953-06-24	Sean Noel
+32	Aspen	Guerra	1964-06-08	Aspen Guerra
+33	Alika	Clay	1957-02-17	Alika Clay
+34	Lamar	Steele	1962-12-25	Lamar Steele
+35	Iona	Le	1960-06-26	Iona Le
+36	Colton	Carroll	1961-05-03	Colton Carroll
+37	Herrod	Mccarthy	1958-03-30	Herrod Mccarthy
+38	Jorden	Newman	1986-06-24	Jorden Newman
+39	Cain	Ramsey	1979-08-30	Cain Ramsey
+40	Carolyn	Ferrell	1945-02-10	Carolyn Ferrell
+41	Abel	Richardson	1975-10-04	Abel Richardson
+42	Jana	Beasley	1968-01-07	Jana Beasley
+43	Macey	Clayton	1951-10-24	Macey Clayton
+44	Nora	Church	1953-05-02	Nora Church
+45	Gillian	Atkinson	1968-07-06	Gillian Atkinson
+46	Genevieve	Conway	1984-05-07	Genevieve Conway
+47	Maxine	Cline	1987-07-03	Maxine Cline
+48	Natalie	Frank	1955-03-27	Natalie Frank
+49	Kirk	Guy	1978-01-17	Kirk Guy
+50	Margaret	Small	1980-03-04	Margaret Small
+\.
+
+
+--
+-- Data for Name: telephone; Type: TABLE DATA; Schema: public; Owner: nsykes
+--
+
+COPY telephone (contact_id, number, type) FROM stdin;
+10001	02162 704294	H
+10002	00144 268822	H
+10003	06379 687492	H
+10004	02327 424228	H
+10005	08266 957903	H
+10006	01580 420831	H
+10007	07687 476107	H
+10008	05395 514371	H
+10009	07210 981195	H
+10010	09249 421490	H
+10011	04881 808265	H
+10012	02435 247938	H
+10013	01745 244156	H
+10014	04173 527495	H
+10015	08374 592465	H
+10016	00762 771131	H
+10017	07375 519270	H
+10018	07929 968284	H
+10019	08535 659702	H
+10020	06718 924695	H
+10021	06994 793295	H
+10022	05847 865887	H
+10023	07370 353800	H
+10024	01234 615366	H
+10025	01355 700393	H
+10026	03633 598823	H
+10027	04410 872569	H
+10028	08933 333630	H
+10029	03982 461192	H
+10030	08789 549123	H
+10031	05951 105155	H
+10032	02348 240882	H
+10033	06622 822514	H
+10034	02141 113267	H
+10035	03992 124388	H
+10036	00102 784487	H
+10037	00910 582256	H
+10038	02181 882651	H
+10039	06607 199773	H
+10040	00164 479393	H
+10041	05505 106341	H
+10042	02837 709721	H
+10043	09171 484426	H
+10044	09249 138009	H
+10045	06491 760944	H
+10046	02201 646473	H
+10047	05452 492543	H
+10048	02013 858127	H
+10049	06405 153730	H
+10050	00859 643487	H
+15001	01362 132403	B
+15002	09517 561408	B
+15003	00889 800477	B
+15004	08063 258930	B
+15005	02008 865354	B
+15006	08109 339448	B
+15007	00120 271054	B
+15008	09582 468252	B
+15009	08566 922724	B
+15010	06894 649085	B
+15011	08439 327900	B
+15012	06569 695654	B
+15013	08624 547229	B
+15014	07797 400566	B
+15015	06937 996829	B
+15016	08461 318864	B
+15017	08636 640166	B
+15018	00181 340926	B
+15019	08241 305440	B
+15020	02371 623006	B
+15021	02568 412329	B
+15022	04933 145636	B
+15023	00448 673391	B
+15024	04702 952550	B
+15025	00395 497518	B
+15026	03881 577703	B
+15027	01360 567370	B
+15028	08535 887642	B
+15029	02417 188117	B
+15030	03285 571837	B
+15031	07855 696181	B
+15032	06416 552444	B
+15033	07047 212542	B
+15034	06835 798373	B
+15035	06652 114392	B
+15036	07099 186174	B
+15037	06145 501067	B
+15038	06463 924946	B
+15039	01393 561002	B
+15040	03955 107406	B
+15041	03803 622901	B
+15042	07162 245263	B
+15043	02668 381967	B
+15044	05543 365555	B
+15045	09270 665476	B
+15046	09613 137632	B
+15047	03315 937372	B
+15048	04121 501951	B
+15049	00996 333985	B
+15050	07694 520309	B
+20001	07704 807121	M
+20002	07467 706512	M
+20003	07294 968303	M
+20004	07927 676485	M
+20005	07432 810464	M
+20006	07212 629466	M
+20007	07982 621643	M
+20008	07252 740401	M
+20009	07352 105333	M
+20010	07605 750117	M
+20011	07332 649563	M
+20012	07403 395441	M
+20013	07576 274202	M
+20014	07346 173637	M
+20015	07956 658810	M
+20016	07002 235033	M
+20017	07970 434011	M
+20018	07252 744116	M
+20019	07936 348012	M
+20020	07924 055600	M
+20021	07636 636141	M
+20022	07639 061020	M
+20023	07335 032203	M
+20024	07821 395393	M
+20025	07164 318886	M
+20026	07681 385511	M
+20027	07069 685124	M
+20028	07182 322159	M
+20029	07013 431692	M
+20030	07076 394756	M
+20031	07384 968305	M
+20032	07932 612686	M
+20033	07396 501232	M
+20034	07202 360179	M
+20035	07289 549092	M
+20036	07893 749650	M
+20037	07509 216726	M
+20038	07153 021910	M
+20039	07578 080655	M
+20040	07016 763328	M
+20041	07365 799371	M
+20042	07611 172291	M
+20043	07898 092809	M
+20044	07127 665002	M
+20045	07743 632288	M
+20046	07891 537917	M
+20047	07646 651559	M
+20048	07874 324331	M
+20049	07558 848781	M
+20050	07427 492054	M
+35001	06984 712073	B
+35002	03505 678628	B
+35003	03228 518434	B
+35004	04217 664306	B
+35005	01751 404813	B
+35006	04202 446799	B
+35007	09465 365183	B
+35008	08949 887455	B
+35009	07882 434840	B
+35010	03842 356170	B
+35011	04889 160702	B
+35012	02672 832341	B
+35013	07211 413789	B
+35014	09066 864140	B
+35015	08979 483515	B
+35016	01762 334801	B
+35017	06584 693430	B
+35018	05609 111287	B
+35019	03431 337896	B
+35020	08316 385142	B
+35021	03539 681220	B
+35022	03154 485513	B
+35023	02463 840321	B
+35024	08828 249268	B
+35025	06378 950073	B
+35026	07407 340716	B
+35027	09046 302573	B
+35028	07243 977433	B
+35029	08101 544600	B
+35030	06822 937977	B
+35031	08557 324032	B
+35032	02115 419510	B
+35033	07409 572210	B
+35034	05416 727606	B
+35035	04691 398886	B
+35036	05583 469750	B
+35037	04659 776816	B
+35038	06567 274276	B
+35039	01825 101856	B
+35040	03404 460754	B
+35041	04192 731212	B
+35042	07560 799917	B
+35043	03531 604334	B
+35044	07812 356716	B
+35045	03500 763151	B
+35046	09470 991390	B
+35047	06689 680384	B
+35048	05883 921450	B
+35049	02873 233503	B
+35050	06471 411646	B
+\.
+
+
+--
+-- Name: pk_address; Type: CONSTRAINT; Schema: public; Owner: nsykes; Tablespace: 
+--
+
+ALTER TABLE ONLY address
+    ADD CONSTRAINT pk_address PRIMARY KEY (contact_id);
+
+
+--
+-- Name: pk_business; Type: CONSTRAINT; Schema: public; Owner: nsykes; Tablespace: 
+--
+
+ALTER TABLE ONLY business
+    ADD CONSTRAINT pk_business PRIMARY KEY (party_id);
+
+
+--
+-- Name: pk_contact; Type: CONSTRAINT; Schema: public; Owner: nsykes; Tablespace: 
+--
+
+ALTER TABLE ONLY contact
+    ADD CONSTRAINT pk_contact PRIMARY KEY (id);
+
+
+--
+-- Name: pk_email; Type: CONSTRAINT; Schema: public; Owner: nsykes; Tablespace: 
+--
+
+ALTER TABLE ONLY email
+    ADD CONSTRAINT pk_email PRIMARY KEY (contact_id);
+
+
+--
+-- Name: pk_party; Type: CONSTRAINT; Schema: public; Owner: nsykes; Tablespace: 
+--
+
+ALTER TABLE ONLY party
+    ADD CONSTRAINT pk_party PRIMARY KEY (id);
+
+
+--
+-- Name: pk_party_contact; Type: CONSTRAINT; Schema: public; Owner: nsykes; Tablespace: 
+--
+
+ALTER TABLE ONLY party_contact
+    ADD CONSTRAINT pk_party_contact PRIMARY KEY (party_id, contact_id, valid_from);
+
+
+--
+-- Name: pk_person; Type: CONSTRAINT; Schema: public; Owner: nsykes; Tablespace: 
+--
+
+ALTER TABLE ONLY person
+    ADD CONSTRAINT pk_person PRIMARY KEY (party_id);
+
+
+--
+-- Name: pk_telephone; Type: CONSTRAINT; Schema: public; Owner: nsykes; Tablespace: 
+--
+
+ALTER TABLE ONLY telephone
+    ADD CONSTRAINT pk_telephone PRIMARY KEY (contact_id);
+
+
+--
+-- Name: address_county_fti; Type: INDEX; Schema: public; Owner: nsykes; Tablespace: 
+--
+
+CREATE INDEX address_county_fti ON address USING gin (to_tsvector('english'::regconfig, (county)::text));
+
+
+--
+-- Name: address_full_address_fti; Type: INDEX; Schema: public; Owner: nsykes; Tablespace: 
+--
+
+CREATE INDEX address_full_address_fti ON address USING gin (to_tsvector('english'::regconfig, (full_address)::text));
+
+
+--
+-- Name: address_post_code_fti; Type: INDEX; Schema: public; Owner: nsykes; Tablespace: 
+--
+
+CREATE INDEX address_post_code_fti ON address USING gin (to_tsvector('english'::regconfig, (post_code)::text));
+
+
+--
+-- Name: address_street_fti; Type: INDEX; Schema: public; Owner: nsykes; Tablespace: 
+--
+
+CREATE INDEX address_street_fti ON address USING gin (to_tsvector('english'::regconfig, (street)::text));
+
+
+--
+-- Name: address_town_fti; Type: INDEX; Schema: public; Owner: nsykes; Tablespace: 
+--
+
+CREATE INDEX address_town_fti ON address USING gin (to_tsvector('english'::regconfig, (town)::text));
+
+
+--
+-- Name: business_name_fti; Type: INDEX; Schema: public; Owner: nsykes; Tablespace: 
+--
+
+CREATE INDEX business_name_fti ON business USING gin (to_tsvector('english'::regconfig, (name)::text));
+
+
+--
+-- Name: person_first_name_fti; Type: INDEX; Schema: public; Owner: nsykes; Tablespace: 
+--
+
+CREATE INDEX person_first_name_fti ON person USING gin (to_tsvector('english'::regconfig, (first_name)::text));
+
+
+--
+-- Name: person_full_name_fti; Type: INDEX; Schema: public; Owner: nsykes; Tablespace: 
+--
+
+CREATE INDEX person_full_name_fti ON person USING gin (to_tsvector('english'::regconfig, (full_name)::text));
+
+
+--
+-- Name: person_last_name_fti; Type: INDEX; Schema: public; Owner: nsykes; Tablespace: 
+--
+
+CREATE INDEX person_last_name_fti ON person USING gin (to_tsvector('english'::regconfig, (last_name)::text));
+
+
+--
+-- Name: address_full_address_tr; Type: TRIGGER; Schema: public; Owner: nsykes
+--
+
+CREATE TRIGGER address_full_address_tr BEFORE INSERT OR UPDATE ON address FOR EACH ROW EXECUTE PROCEDURE address_full_address_tf();
+
+
+--
+-- Name: person_full_name_tr; Type: TRIGGER; Schema: public; Owner: nsykes
+--
+
+CREATE TRIGGER person_full_name_tr BEFORE INSERT OR UPDATE ON person FOR EACH ROW EXECUTE PROCEDURE person_full_name_tf();
+
+
+--
+-- Name: fk_address_contact; Type: FK CONSTRAINT; Schema: public; Owner: nsykes
+--
+
+ALTER TABLE ONLY address
+    ADD CONSTRAINT fk_address_contact FOREIGN KEY (contact_id) REFERENCES contact(id);
+
+
+--
+-- Name: fk_business_party; Type: FK CONSTRAINT; Schema: public; Owner: nsykes
+--
+
+ALTER TABLE ONLY business
+    ADD CONSTRAINT fk_business_party FOREIGN KEY (party_id) REFERENCES party(id);
+
+
+--
+-- Name: fk_email_contact; Type: FK CONSTRAINT; Schema: public; Owner: nsykes
+--
+
+ALTER TABLE ONLY email
+    ADD CONSTRAINT fk_email_contact FOREIGN KEY (contact_id) REFERENCES contact(id);
+
+
+--
+-- Name: fk_party_contact_contact; Type: FK CONSTRAINT; Schema: public; Owner: nsykes
+--
+
+ALTER TABLE ONLY party_contact
+    ADD CONSTRAINT fk_party_contact_contact FOREIGN KEY (contact_id) REFERENCES contact(id);
+
+
+--
+-- Name: fk_party_contact_party; Type: FK CONSTRAINT; Schema: public; Owner: nsykes
+--
+
+ALTER TABLE ONLY party_contact
+    ADD CONSTRAINT fk_party_contact_party FOREIGN KEY (party_id) REFERENCES party(id);
+
+
+--
+-- Name: fk_person_party; Type: FK CONSTRAINT; Schema: public; Owner: nsykes
+--
+
+ALTER TABLE ONLY person
+    ADD CONSTRAINT fk_person_party FOREIGN KEY (party_id) REFERENCES party(id);
+
+
+--
+-- Name: fk_telephone_contact; Type: FK CONSTRAINT; Schema: public; Owner: nsykes
+--
+
+ALTER TABLE ONLY telephone
+    ADD CONSTRAINT fk_telephone_contact FOREIGN KEY (contact_id) REFERENCES contact(id);
+
+
+--
+-- Name: public; Type: ACL; Schema: -; Owner: nobody
+--
+
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+REVOKE ALL ON SCHEMA public FROM nobody;
+GRANT ALL ON SCHEMA public TO nobody;
+GRANT ALL ON SCHEMA public TO PUBLIC;
+
+
+--
+-- PostgreSQL database dump complete
+--
+
