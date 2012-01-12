@@ -35,27 +35,6 @@ create index person_last_name_fti on person
 create index person_full_name_fti on person 
    using gin(to_tsvector('english', full_name));
 
-create function person_full_name_tf() 
-   returns trigger
-as 
-$$
-begin
-
-    NEW.full_name = 
-       NEW.first_name || ' ' || NEW.last_name;
-
-    return NEW;
-
-end;
-$$
-language plpgsql;
-
-create trigger person_full_name_tr 
-    before insert or update
-    on person
-for each row execute procedure person_full_name_tf();
-
-
 create table business
 (
     party_id integer not null,
@@ -106,28 +85,6 @@ create index address_post_code_fti on address
 
 create index address_full_address_fti on address
    using gin(to_tsvector('english', full_address));
-
-create function address_full_address_tf() 
-   returns trigger
-as 
-$$
-begin
-
-    NEW.full_address = 
-       NEW.street || ' ' || NEW.town 
-    || coalesce(' ' || NEW.county, '')
-    || coalesce(' ' || NEW.post_code, '');
-
-    return NEW;
-
-end;
-$$
-language plpgsql;
-
-create trigger address_full_address_tr 
-    before insert or update
-    on address
-for each row execute procedure address_full_address_tf();
 
 create table email
 (
