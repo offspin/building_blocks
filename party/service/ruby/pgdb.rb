@@ -7,7 +7,7 @@ def connect_db
 	dbu = URI.parse(ENV['DATABASE_URL'])
 	db = PGconn.new(:host => dbu.host, :user => dbu.user, :password => dbu.password, :dbname => dbu.path[1..-1])
     else
-	db = PGconn.new(:host => 'localhost', :dbname => 'party')
+	db = PGconn.new(:dbname => 'party')
     end
 
 end
