@@ -22,6 +22,7 @@ create table person
     date_of_birth date not null,
     full_name varchar(70) null,
     constraint pk_person primary key(party_id),
+    constraint ak_person unique(first_name, last_name, date_of_birth),
     constraint fk_person_party 
       foreign key(party_id) references party(id)
 );
@@ -40,6 +41,7 @@ create table business
     party_id integer not null,
     name varchar(60) not null,
     constraint pk_business primary key(party_id),
+    constraint ak_business unique(name),
     constraint fk_business_party 
        foreign key(party_id) references party(id)
 );
@@ -92,6 +94,7 @@ create table email
     address varchar(100) not null,
     type char(1) not null,
     constraint pk_email primary key(contact_id),
+    constraint ak_email unique(address, type),
     constraint ck_email_type check(type in ('B','H')),
     constraint fk_email_contact
        foreign key(contact_id) references contact(id)
@@ -103,6 +106,7 @@ create table telephone
     number varchar(50) not null,
     type char(1) not null,
     constraint pk_telephone primary key(contact_id),
+    constraint ak_telephone unique(number, type),
     constraint ck_telephone_type check(type in ('B','H','M')),
     constraint fk_telephone_contact 
        foreign key(contact_id) references contact(id)
@@ -140,3 +144,11 @@ create table system_config
     constraint pk_system_config primary key(name)
 );
 
+insert into system_config(name, string_value) values ('REALM', 'Party Service');
+insert into system_config(name, string_value) values ('OPAQUE', 'partypizza');
+
+insert into user_of_system(name, full_name, password_hash)
+select 'admin', 'Administrator',
+       md5('admin:' || string_value || ':admin')
+from   system_config
+where  name = 'REALM';
