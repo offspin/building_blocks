@@ -365,6 +365,37 @@ def create_email(db, address, type)
 
 end
 
+def delete_contact(db, contact_id)
+
+    address_sql = <<-EOS
+        delete from address
+        where  contact_id = $1;
+    EOS
+
+    email_sql = <<-EOS
+        delete from email
+        where  contact_id = $1;
+    EOS
+
+    telephone_sql = <<-EOS
+        delete from telephone
+        where  contact_id = $1;
+    EOS
+
+    contact_sql = <<-EOS
+        delete from contact
+        where  id = $1;
+    EOS
+
+    db.transaction do
+        db.exec(address_sql, [contact_id])
+        db.exec(email_sql, [contact_id])
+        db.exec(telephone_sql, [contact_id])
+        db.exec(contact_sql, [contact_id])
+    end
+
+end
+
 def create_party_contact(db, party_id, contact_id, valid_from, valid_until)
 
     sql = <<-EOS
