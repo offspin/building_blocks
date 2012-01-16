@@ -94,6 +94,12 @@ describe 'PostgreSQL Database' do
 
     it 'should link the address created to the person created' do
 	create_party_contact(db, person_party_id, address_contact_id, '2000-05-06', '2005-06-05')
+        pc = get_party_contact(db, person_party_id, address_contact_id)
+        pc.should_not be nil
+    end
+
+    it 'should find the linked address in the person\'s contacts' do
+
 	res = get_contact_bypartyid(db, person_party_id)
 
 	found = false
