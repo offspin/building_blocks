@@ -396,6 +396,20 @@ def delete_contact(db, contact_id)
 
 end
 
+def get_party_contact(db, party_id, contact_id)
+
+    sql = <<-EOS
+        select party_id, contact_id, valid_from, valid_until
+        from   party_contact
+        where  party_id = $1 and contact_id = $2;
+    EOS
+
+    res = db.exec(sql, [party_id, contact_id])
+
+    pc = res.first
+
+end
+
 def create_party_contact(db, party_id, contact_id, valid_from, valid_until)
 
     sql = <<-EOS
