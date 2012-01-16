@@ -192,5 +192,29 @@ describe 'PostgreSQL Database' do
 	res.should be nil
     end
 
+    it 'should delete remaining contacts' do
+
+        delete_contact(db, home_telephone_contact_id)
+        res = get_contact(db, home_telephone_contact_id)
+        res.should be nil
+
+        delete_contact(db, business_telephone_contact_id)
+        res = get_contact(db, business_telephone_contact_id)
+        res.should be nil
+
+        delete_contact(db, mobile_telephone_contact_id)
+        res = get_contact(db, mobile_telephone_contact_id)
+        res.should be nil
+
+        delete_contact(db, home_email_contact_id)
+        res = get_contact(db, home_email_contact_id)
+        res.should be nil
+
+        delete_contact(db, business_email_contact_id)
+        res = get_contact(db, business_email_contact_id)
+        res.should be nil
+
+    end
+
 
 end
