@@ -27,6 +27,7 @@ describe Party::PostgresDatabase do
 
     it 'should find the person created by id' do
 	res = @db.get_party(person_party_id)
+        res['type'].should == 'P'
 	res['first_name'].should == 'First'
 	res['last_name'].should == 'Last'
 	res['date_of_birth'].should == '2000-03-05'
@@ -170,6 +171,7 @@ describe Party::PostgresDatabase do
 
     it 'should find the business created by id' do
 	res = @db.get_party(business_party_id)
+        res['type'].should == 'B'
 	res['name'].should == 'The Business'
     end
 

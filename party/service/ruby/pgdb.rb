@@ -118,7 +118,7 @@ module Party
         def create_business(name)
 
             party_sql = <<-EOS
-                insert into party(type) values('P');
+                insert into party(type) values('B');
             EOS
 
             business_sql = <<-EOS
