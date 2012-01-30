@@ -69,6 +69,7 @@ create table address
     post_code varchar(20) null,
     full_address varchar(160) null,
     constraint pk_address primary key(contact_id),
+    constraint ak_address unique(street, town, county, post_code),
     constraint fk_address_contact
        foreign key(contact_id) references contact(id)
 );
