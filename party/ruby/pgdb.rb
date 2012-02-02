@@ -306,25 +306,6 @@ module Party
 
         end
 
-        def delete_address(contact_id)
-
-            address_sql = <<-EOS
-                delete from address
-                where  contact_id = $1;
-            EOS
-
-            contact_sql = <<-EOS
-                delete from contact
-                where  id = $1;
-            EOS
-
-            @connection.transaction do
-                @connection.exec(address_sql, [contact_id])
-                @connection.exec(contact_sql, [contact_id])
-            end
-
-        end
-
         def create_telephone(number, type)
 
             contact_sql = <<-EOS

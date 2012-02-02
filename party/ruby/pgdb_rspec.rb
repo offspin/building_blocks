@@ -153,7 +153,7 @@ describe Party::PostgresDatabase do
     end
 
     it 'should delete the unlinked address' do
-	@db.delete_address(address_contact_id)
+	@db.delete_contact(address_contact_id)
 	res = @db.get_contact(address_contact_id)
 	res.should be nil
     end
