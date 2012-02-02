@@ -56,7 +56,8 @@ create table dbo.person
     first_name varchar(30) not null,
     last_name varchar(30) not null,
     date_of_birth date not null,
-    full_name varchar(70) null,
+    full_name 
+      as first_name + ' ' + last_name,
     constraint pk_person primary key(party_id),
     constraint ak_person unique(first_name, last_name, date_of_birth),
     constraint fk_person_party 
@@ -104,7 +105,10 @@ create table dbo.address
     town varchar(50) not null,
     county varchar(30) null,
     post_code varchar(20) null,
-    full_address varchar(160) null,
+    full_address 
+      as street + ' ' + town 
+        + coalesce(' ' + county, '')
+        + coalesce(' ' + post_code, ''),
     constraint pk_address primary key(contact_id),
     constraint ak_address unique(street, town, county, post_code),
     constraint fk_address_contact
