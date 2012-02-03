@@ -50,11 +50,13 @@ begin
        + '*"'
 
     select p.party_id as id,
+           'P' as type,
            p.full_name as name
     from   person as p
     where  contains(*, @search)
     union
     select b.party_id as id,
+           'B' as type,
            b.name
     from   business as b
     where  contains(*, @search)
