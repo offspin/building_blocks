@@ -173,7 +173,7 @@ begin
 
         if @InTrans = 0 begin transaction
 
-        insert into dbo.party(type) values ('P') 
+        insert into dbo.party(type) values ('B') 
 
         set @Id = scope_identity()
 
