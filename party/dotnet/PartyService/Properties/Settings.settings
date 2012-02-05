@@ -1,0 +1,12 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="PartyService.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="DatabaseClass" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">PartyService.SqlServerDatabase</Value>
+    </Setting>
+    <Setting Name="DatabaseConnectionString" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Server=.;Database=Party;Integrated Security=true;</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
