@@ -16,7 +16,9 @@ namespace PartyService
 
         private SqlConnection Connect()
         {
-            return new SqlConnection(this.connectionString);
+            SqlConnection cn = new SqlConnection(this.connectionString);
+            cn.Open();
+            return cn;
         }
 
         private void Disconnect(SqlConnection cn)
@@ -30,7 +32,7 @@ namespace PartyService
             SqlConnection cn = Connect();
             try
             {
-                cn.Open();
+                
                 using (SqlCommand cmd = new SqlCommand("GetParty", cn) )        
                 {
                     cmd.Parameters.AddWithValue("@Id", id);
@@ -54,7 +56,7 @@ namespace PartyService
             SqlConnection cn = Connect();
             try
             {
-                cn.Open();
+                
                 using (SqlCommand cmd = new SqlCommand("GetPartyByName", cn))
                 {
                     cmd.Parameters.AddWithValue("@Name", name);
@@ -79,7 +81,7 @@ namespace PartyService
 
             try
             {
-                cn.Open();
+                
                 using (SqlCommand cmd = new SqlCommand("CreatePerson", cn))
                 {
                     cmd.Parameters.Add("@Id", SqlDbType.Int);
@@ -107,7 +109,7 @@ namespace PartyService
 
             try
             {
-                cn.Open();
+                
                 using (SqlCommand cmd = new SqlCommand("UpdatePerson", cn))
                 {
                     cmd.Parameters.AddWithValue("@Id", id);
@@ -130,7 +132,7 @@ namespace PartyService
            
             try
             {
-                cn.Open();
+                
                 object newId;
 
                 using (SqlCommand cmd = new SqlCommand("CreateBusiness",cn))
@@ -157,7 +159,7 @@ namespace PartyService
 
             try
             {
-                cn.Open();
+                
                 using (SqlCommand cmd = new SqlCommand("UpdateBusiness", cn))
                 {
                     cmd.Parameters.AddWithValue("@Id", id);
@@ -178,7 +180,7 @@ namespace PartyService
 
             try
             {
-                cn.Open();
+                
                 using (SqlCommand cmd = new SqlCommand("DeleteParty", cn))
                 {
                     cmd.Parameters.AddWithValue("@Id", id);
@@ -199,7 +201,7 @@ namespace PartyService
             DataSet ds = new DataSet();
             try
             {
-                cn.Open();
+                
                 using (SqlCommand cmd = new SqlCommand("GetContact", cn))
                 {
                     cmd.Parameters.AddWithValue("@Id", id);
@@ -219,14 +221,14 @@ namespace PartyService
 
         }
 
-        public DataTable GetContactsByPartyId(int partyId)
+        public DataTable GetContactByPartyId(int partyId)
         {
             SqlConnection cn = Connect();
             DataSet ds = new DataSet();
             try
             {
-                cn.Open();
-                using (SqlCommand cmd = new SqlCommand("GetContactsByPartyId", cn))
+                
+                using (SqlCommand cmd = new SqlCommand("GetContactByPartyId", cn))
                 {
                     cmd.Parameters.AddWithValue("@PartyId", partyId);
                     cmd.CommandType = CommandType.StoredProcedure;
@@ -251,15 +253,23 @@ namespace PartyService
 
             try
             {
-                cn.Open();
+                
                 using (SqlCommand cmd = new SqlCommand("CreateAddress", cn))
                 {
                     cmd.Parameters.Add("@Id", SqlDbType.Int);
                     cmd.Parameters["@Id"].Direction = ParameterDirection.Output;
                     cmd.Parameters.AddWithValue("@Street", street);
                     cmd.Parameters.AddWithValue("@Town", town);
-                    cmd.Parameters.AddWithValue("@County", county);
-                    cmd.Parameters.AddWithValue("@PostCode", postCode);
+                    cmd.Parameters.AddWithValue("@County", DBNull.Value);
+                    if (county != null && county != string.Empty)
+                    {
+                        cmd.Parameters["@County"].Value = county;
+                    }
+                    cmd.Parameters.AddWithValue("@PostCode", DBNull.Value);
+                    if (postCode != null && postCode != string.Empty)
+                    {
+                        cmd.Parameters["@PostCode"].Value = postCode;
+                    }
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.ExecuteNonQuery();
                     newId = cmd.Parameters["@Id"].Value;
@@ -278,14 +288,22 @@ namespace PartyService
 
             try
             {
-                cn.Open();
+                
                 using (SqlCommand cmd = new SqlCommand("UpdateAddress", cn))
                 {
                     cmd.Parameters.AddWithValue("@Id", id);
                     cmd.Parameters.AddWithValue("@Street", street);
                     cmd.Parameters.AddWithValue("@Town", town);
-                    cmd.Parameters.AddWithValue("@County", county);
-                    cmd.Parameters.AddWithValue("@PostCode", postCode);
+                    cmd.Parameters.AddWithValue("@County", DBNull.Value);
+                    if (county != null && county != string.Empty)
+                    {
+                        cmd.Parameters["@County"].Value = county;
+                    }
+                    cmd.Parameters.AddWithValue("@PostCode", DBNull.Value);
+                    if (postCode != null && postCode != string.Empty)
+                    {
+                        cmd.Parameters["@PostCode"].Value = postCode;
+                    }
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.ExecuteNonQuery();
                 }
@@ -304,6 +322,7 @@ namespace PartyService
 
             try
             {
+                
                 using (SqlCommand cmd = new SqlCommand("CreateEmail", cn))
                 {
                     cmd.Parameters.Add("@Id", SqlDbType.Int);
@@ -329,6 +348,7 @@ namespace PartyService
 
             try
             {
+                
                 using (SqlCommand cmd = new SqlCommand("UpdateEmail", cn))
                 {
                     cmd.Parameters.AddWithValue("@Id", id);
@@ -351,6 +371,7 @@ namespace PartyService
 
             try
             {
+                
                 using (SqlCommand cmd = new SqlCommand("CreateTelephone", cn))
                 {
                     cmd.Parameters.Add("@Id", SqlDbType.Int);
@@ -376,6 +397,7 @@ namespace PartyService
 
             try
             {
+                
                 using (SqlCommand cmd = new SqlCommand("UpdateTelephone", cn))
                 {
                     cmd.Parameters.AddWithValue("@Id", id);
@@ -398,6 +420,7 @@ namespace PartyService
 
             try
             {
+                
                 using (SqlCommand cmd = new SqlCommand("DeleteContact", cn))
                 {
                     cmd.Parameters.AddWithValue("@Id", id);
@@ -418,6 +441,7 @@ namespace PartyService
 
             try
             {
+                
                 using (SqlCommand cmd = new SqlCommand("GetPartyContact", cn))
                 {
                     cmd.Parameters.AddWithValue("@PartyId", partyId);
@@ -443,6 +467,7 @@ namespace PartyService
 
             try
             {
+                
                 using (SqlCommand cmd = new SqlCommand("CreatePartyContact", cn))
                 {
                     cmd.Parameters.AddWithValue("@PartyId", partyId);
@@ -466,6 +491,7 @@ namespace PartyService
 
             try
             {
+                
                 using (SqlCommand cmd = new SqlCommand("UpdatePartyContact", cn))
                 {
                     cmd.Parameters.AddWithValue("@PartyId", partyId);
@@ -490,6 +516,7 @@ namespace PartyService
 
             try
             {
+                
                 using (SqlCommand cmd = new SqlCommand("DeletePartyContact", cn))
                 {
                     cmd.Parameters.AddWithValue("@PartyId", partyId);
@@ -512,6 +539,7 @@ namespace PartyService
 
             try
             {
+                
                 using (SqlCommand cmd = new SqlCommand("GetSystemConfig", cn))
                 {
                     cmd.Parameters.AddWithValue("@Name", name);

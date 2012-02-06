@@ -2,6 +2,7 @@
 using System.ServiceModel;
 using System.ServiceModel.Web;
 using System.ServiceModel.Description;
+using System.ServiceModel.Security;
 
 namespace PartyServer
 {
@@ -12,9 +13,13 @@ namespace PartyServer
 
             WebServiceHost wsh = new WebServiceHost(typeof(PartyService.Service), new Uri("http://localhost:8000"));
 
-            ServiceEndpoint ep = wsh.AddServiceEndpoint(typeof(PartyService.Service), new WebHttpBinding(), "");
+            WebHttpBinding whb = new WebHttpBinding(WebHttpSecurityMode.TransportCredentialOnly);
+            whb.Security.Transport.ClientCredentialType = HttpClientCredentialType.Basic;
 
-            wsh.Description.Behaviors.Find<ServiceDebugBehavior>().IncludeExceptionDetailInFaults = true;
+            wsh.Credentials.UserNameAuthentication.UserNamePasswordValidationMode = UserNamePasswordValidationMode.Custom;
+            wsh.Credentials.UserNameAuthentication.CustomUserNamePasswordValidator = new PartyService.Validator();
+            ServiceEndpoint ep = wsh.AddServiceEndpoint(typeof(PartyService.Service), whb, "");
+          
 
             wsh.Open();
             Console.WriteLine("Service is running - press enter to quit");

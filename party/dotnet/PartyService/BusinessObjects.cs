@@ -118,6 +118,26 @@ namespace PartyService
         }
     }
 
+    public class PartyContact : PartyServiceObject
+    {
+        [XmlAttribute]
+        public int PartyId { get; set; }
+        [XmlAttribute]
+        public int ContactId { get; set; }
+        public DateTime ValidFrom { get; set; }
+        public DateTime ValidUntil { get; set; }
+
+
+        public PartyContact() { }
+        public PartyContact(int partyId, int contactId, DateTime validFrom, DateTime validUntil)
+        {
+            PartyId = partyId;
+            ContactId = contactId;
+            ValidFrom = validFrom;
+            ValidUntil = validUntil;
+        }
+    }
+
     public class PartySummary
     {
         [XmlAttribute]

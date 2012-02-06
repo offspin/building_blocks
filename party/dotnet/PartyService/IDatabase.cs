@@ -15,7 +15,7 @@ namespace PartyService
         void UpdateBusiness(int id, string name);
         void DeleteParty(int id);
         DataRow GetContact(int id);
-        DataTable GetContactsByPartyId(int partyId);
+        DataTable GetContactByPartyId(int partyId);
         int CreateAddress(string street, string town, string county, string postCode);
         void UpdateAddress(int id, string street, string town, string county, string postCode);
         int CreateEmail(string type, string address);
