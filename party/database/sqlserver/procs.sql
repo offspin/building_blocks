@@ -476,6 +476,8 @@ begin
         insert into dbo.telephone(contact_id, type, number) 
         values(@Id, @Type, @Number)
 
+        if @InTrans = 0 commit
+
     end try
     begin catch
 
