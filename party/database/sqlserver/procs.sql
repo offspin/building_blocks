@@ -616,12 +616,12 @@ begin
 
     begin try
 
+        if @InTrans = 0 begin transaction
+
         if exists
          (select * from dbo.party_contact
           where  contact_id = @Id)
             raiserror('Contact is in use', 16, 1)
-
-        if @InTrans = 0 begin transaction
 
         delete from dbo.address
         where  contact_id = @Id
