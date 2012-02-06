@@ -568,6 +568,31 @@ go
 grant execute on dbo.CreateEmail to public
 go
 
+if object_id('dbo.UpdateEmail') is not null
+    drop procedure dbo.UpdateEmail
+go
+
+print 'Procedure : UpdateEmail'
+go
+
+create procedure dbo.UpdateEmail
+    @Id int,
+    @Type char(1),
+    @Address varchar(100)
+as
+begin
+
+    update dbo.Email
+    set    type = @Type,
+           address = @Address
+    where  contact_id = @Id
+
+end
+go
+
+grant execute on dbo.UpdateEmail to public
+go
+
 if object_id('dbo.DeleteContact') is not null
     drop procedure dbo.DeleteContact
 go
