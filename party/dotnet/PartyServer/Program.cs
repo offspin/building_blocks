@@ -18,8 +18,9 @@ namespace PartyServer
 
             wsh.Credentials.UserNameAuthentication.UserNamePasswordValidationMode = UserNamePasswordValidationMode.Custom;
             wsh.Credentials.UserNameAuthentication.CustomUserNamePasswordValidator = new PartyService.Validator();
+            
             ServiceEndpoint ep = wsh.AddServiceEndpoint(typeof(PartyService.Service), whb, "");
-          
+            
 
             wsh.Open();
             Console.WriteLine("Service is running - press enter to quit");

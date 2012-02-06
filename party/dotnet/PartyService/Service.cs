@@ -13,7 +13,7 @@ namespace PartyService
     {
         private IDatabase database;
 
-        public Service() 
+        public Service()
         {
             string dbClassName = Properties.Settings.Default.DatabaseClass;
             string dbConnectionString = Properties.Settings.Default.DatabaseConnectionString;
@@ -22,7 +22,7 @@ namespace PartyService
             {
                 throw (new Exception("Service Configuration Error"));
             }
-            database = (IDatabase) Activator.CreateInstance(Type.GetType(dbClassName));
+            database = (IDatabase)Activator.CreateInstance(Type.GetType(dbClassName));
             database.setConnectionString(dbConnectionString);
 
         }
@@ -33,14 +33,15 @@ namespace PartyService
         [ServiceKnownType(typeof(Business))]
         public Party GetParty(string idStr)
         {
+
             try
             {
                 int id;
 
                 if (!int.TryParse(idStr, out id))
                 {
-                    throw (new PartyServiceException(
-                        string.Format("'{0}' is not a valid party identifier", idStr),
+                    throw (new WebFaultException<Error>(
+                        new Error(string.Format("'{0}' is not a valid party idenfifier", idStr)),
                         HttpStatusCode.BadRequest));
                 }
 
@@ -48,8 +49,8 @@ namespace PartyService
 
                 if (r == null)
                 {
-                    throw (new PartyServiceException(
-                        string.Format("Party {0} not found", id), 
+                    throw (new WebFaultException<Error>(
+                        new Error(string.Format("Party {0} not found", id)),
                         HttpStatusCode.NotFound));
                 }
 
@@ -66,15 +67,16 @@ namespace PartyService
                         string name = Convert.ToString(r["name"]);
                         return new Business(id, name);
                     default:
-                        throw (new PartyServiceException(
-                        string.Format("Unknown party type '{0}' retrieved", type)));
+                        throw (new Exception(
+                            string.Format("Unknown party type '{0}' retrieved", type)));
                 }
+
             }
             catch (Exception ex)
             {
-                return (Party)ErrorObject(new Party(), ex);
+                throw MakeWebFaultException(ex);
             }
-     
+
         }
 
         [WebGet(UriTemplate = "party/byname/{name}")]
@@ -106,7 +108,7 @@ namespace PartyService
             }
             catch (Exception ex)
             {
-                return (PartyResults)ErrorObject(new PartyResults(), ex);
+                throw MakeWebFaultException(ex);
             }
         }
 
@@ -121,7 +123,7 @@ namespace PartyService
             }
             catch (Exception ex)
             {
-                return (Person)ErrorObject(person, ex);
+                throw MakeWebFaultException(ex);
             }
         }
 
@@ -135,15 +137,15 @@ namespace PartyService
 
                 if (!int.TryParse(idStr, out id))
                 {
-                    throw (new PartyServiceException(
-                        string.Format("'{0}' is not a valid party identifier", idStr),
+                    throw (new WebFaultException<Error>(
+                        new Error(string.Format("'{0}' is not a valid party identifier", idStr)),
                         HttpStatusCode.BadRequest));
                 }
 
                 if (database.GetParty(id) == null)
                 {
-                    throw (new PartyServiceException(
-                        string.Format("Person {0} not found", id), 
+                    throw (new WebFaultException<Error>(
+                        new Error(string.Format("Person {0} not found", id)),
                         HttpStatusCode.NotFound));
                 }
 
@@ -154,7 +156,7 @@ namespace PartyService
             }
             catch (Exception ex)
             {
-                return (Person)ErrorObject(person, ex);
+                throw MakeWebFaultException(ex);
             }
         }
 
@@ -169,7 +171,7 @@ namespace PartyService
             }
             catch (Exception ex)
             {
-                return (Business)ErrorObject(business, ex);
+                throw MakeWebFaultException(ex);
             }
         }
 
@@ -183,8 +185,8 @@ namespace PartyService
 
                 if (!int.TryParse(idStr, out id))
                 {
-                    throw (new PartyServiceException(
-                        string.Format("'{0}' is not a valid party identifier", idStr),
+                    throw (new WebFaultException<Error>(
+                        new Error(string.Format("'{0}' is not a valid party identifier", idStr)),
                         HttpStatusCode.BadRequest));
                 }
 
@@ -194,12 +196,12 @@ namespace PartyService
                 }
 
                 database.UpdateBusiness(id, business.Name);
-                
+
                 return (Business)GetParty(idStr);
             }
             catch (Exception ex)
             {
-                return (Business)ErrorObject(business, ex);
+                throw MakeWebFaultException(ex);
             }
 
         }
@@ -215,8 +217,8 @@ namespace PartyService
 
                 if (!int.TryParse(idStr, out id))
                 {
-                    throw (new PartyServiceException(
-                        string.Format("'{0}' is not a valid party identifier", idStr),
+                    throw (new WebFaultException<Error>(
+                        new Error(string.Format("'{0}' is not a valid party identifier", idStr)),
                         HttpStatusCode.BadRequest));
                 }
 
@@ -232,7 +234,7 @@ namespace PartyService
             }
             catch (Exception ex)
             {
-                return (Acknowledgement)ErrorObject(new Acknowledgement(), ex);
+                throw MakeWebFaultException(ex);
             }
 
         }
@@ -250,8 +252,8 @@ namespace PartyService
 
                 if (!int.TryParse(idStr, out id))
                 {
-                    throw (new PartyServiceException(
-                        string.Format("'{0}' is not a valid contact identifier", idStr),
+                    throw (new WebFaultException<Error>(
+                        new Error(string.Format("'{0}' is not a valid contact identifier", idStr)),
                         HttpStatusCode.BadRequest));
                 }
 
@@ -259,8 +261,8 @@ namespace PartyService
 
                 if (r == null)
                 {
-                    throw (new PartyServiceException(
-                        string.Format("Contact {0} not found", id),
+                    throw (new WebFaultException<Error>(
+                        new Error(string.Format("Contact {0} not found", id)),
                         HttpStatusCode.NotFound));
                 }
 
@@ -282,17 +284,17 @@ namespace PartyService
                     case "T":
                         return new Telephone(id, subType, telephoneNumber);
                     default:
-                        throw (new PartyServiceException(
+                        throw (new Exception(
                         string.Format("Unknown contact type '{0}' retrieved", type)));
                 }
             }
             catch (Exception ex)
             {
-                return (Contact)ErrorObject(new Contact(), ex);
+                throw MakeWebFaultException(ex);
             }
         }
 
-        [WebInvoke(UriTemplate="address")]
+        [WebInvoke(UriTemplate = "address")]
         [OperationContract]
         public Address CreateAddress(Address address)
         {
@@ -303,7 +305,7 @@ namespace PartyService
             }
             catch (Exception ex)
             {
-                return (Address)ErrorObject(address, ex);
+                throw MakeWebFaultException(ex);
             }
         }
 
@@ -317,8 +319,8 @@ namespace PartyService
 
                 if (!int.TryParse(idStr, out id))
                 {
-                    throw (new PartyServiceException(
-                        string.Format("'{0}' is not a valid contact identifier", idStr),
+                    throw (new WebFaultException<Error>(
+                        new Error(string.Format("'{0}' is not a valid contact identifier", idStr)),
                         HttpStatusCode.BadRequest));
                 }
 
@@ -333,7 +335,7 @@ namespace PartyService
             }
             catch (Exception ex)
             {
-                return (Address)ErrorObject(address, ex);
+                throw MakeWebFaultException(ex);
             }
         }
 
@@ -348,7 +350,7 @@ namespace PartyService
             }
             catch (Exception ex)
             {
-                return (Email)ErrorObject(email, ex);
+                throw MakeWebFaultException(ex);
             }
         }
 
@@ -362,8 +364,8 @@ namespace PartyService
 
                 if (!int.TryParse(idStr, out id))
                 {
-                    throw (new PartyServiceException(
-                        string.Format("'{0}' is not a valid contact identifier", idStr),
+                    throw (new WebFaultException<Error>(
+                        new Error(string.Format("'{0}' is not a valid contact identifier", idStr)),
                         HttpStatusCode.BadRequest));
                 }
 
@@ -378,7 +380,7 @@ namespace PartyService
             }
             catch (Exception ex)
             {
-                return (Email)ErrorObject(email, ex);
+                throw MakeWebFaultException(ex);
             }
         }
 
@@ -393,7 +395,7 @@ namespace PartyService
             }
             catch (Exception ex)
             {
-                return (Telephone)ErrorObject(telephone, ex);
+                throw MakeWebFaultException(ex);
             }
         }
 
@@ -407,8 +409,8 @@ namespace PartyService
 
                 if (!int.TryParse(idStr, out id))
                 {
-                    throw (new PartyServiceException(
-                        string.Format("'{0}' is not a valid contact identifier", idStr),
+                    throw (new WebFaultException<Error>(
+                        new Error(string.Format("'{0}' is not a valid contact identifier", idStr)),
                         HttpStatusCode.BadRequest));
                 }
 
@@ -423,7 +425,7 @@ namespace PartyService
             }
             catch (Exception ex)
             {
-                return (Telephone)ErrorObject(telephone, ex);
+                throw MakeWebFaultException(ex);
             }
         }
 
@@ -439,8 +441,8 @@ namespace PartyService
 
                 if (!int.TryParse(idStr, out id))
                 {
-                    throw (new PartyServiceException(
-                        string.Format("'{0}' is not a valid contact identifier", idStr),
+                    throw (new WebFaultException<Error>(
+                        new Error(string.Format("'{0}' is not a valid contact identifier", idStr)),
                         HttpStatusCode.BadRequest));
                 }
 
@@ -456,7 +458,7 @@ namespace PartyService
             }
             catch (Exception ex)
             {
-                return (Acknowledgement)ErrorObject(new Acknowledgement(), ex);
+                throw MakeWebFaultException(ex);
             }
 
         }
@@ -473,15 +475,15 @@ namespace PartyService
 
                 if (!int.TryParse(partyIdStr, out partyId))
                 {
-                    throw (new PartyServiceException(
-                        string.Format("'{0}' is not a valid party identifier", partyIdStr),
+                    throw (new WebFaultException<Error>(
+                        new Error(string.Format("'{0}' is not a valid party identifier", partyIdStr)),
                         HttpStatusCode.BadRequest));
                 }
 
                 if (!int.TryParse(contactIdStr, out contactId))
                 {
-                    throw (new PartyServiceException(
-                        string.Format("'{0}' is not a valid contact identifier", contactIdStr),
+                    throw (new WebFaultException<Error>(
+                        new Error(string.Format("'{0}' is not a valid contact identifier", contactIdStr)),
                         HttpStatusCode.BadRequest));
                 }
 
@@ -489,8 +491,8 @@ namespace PartyService
 
                 if (r == null)
                 {
-                    throw (new PartyServiceException(
-                        string.Format("Party {0} is not linked to contact {1}", partyId, contactId),
+                    throw (new WebFaultException<Error>(
+                        new Error(string.Format("Party {0} is not linked to contact {1}", partyId, contactId)),
                         HttpStatusCode.NotFound));
                 }
 
@@ -502,11 +504,10 @@ namespace PartyService
             }
             catch (Exception ex)
             {
-                return (PartyContact)ErrorObject(new PartyContact(), ex);
+                throw MakeWebFaultException(ex);
             }
-     
-        }
 
+        }
 
         [WebInvoke(UriTemplate = "/party/contact")]
         [OperationContract]
@@ -516,7 +517,7 @@ namespace PartyService
             try
             {
                 database.CreatePartyContact(
-                    partyContact.PartyId, partyContact.ContactId, 
+                    partyContact.PartyId, partyContact.ContactId,
                     partyContact.ValidFrom, partyContact.ValidUntil);
 
                 return GetPartyContact(
@@ -526,7 +527,7 @@ namespace PartyService
             }
             catch (Exception ex)
             {
-                return (PartyContact)ErrorObject(partyContact, ex);
+                throw MakeWebFaultException(ex);
             }
 
         }
@@ -543,15 +544,15 @@ namespace PartyService
 
                 if (!int.TryParse(partyIdStr, out partyId))
                 {
-                    throw (new PartyServiceException(
-                        string.Format("'{0}' is not a valid party identifier", partyIdStr),
+                    throw (new WebFaultException<Error>(
+                        new Error(string.Format("'{0}' is not a valid party identifier", partyIdStr)),
                         HttpStatusCode.BadRequest));
                 }
 
                 if (!int.TryParse(contactIdStr, out contactId))
                 {
-                    throw (new PartyServiceException(
-                        string.Format("'{0}' is not a valid contact identifier", contactIdStr),
+                    throw (new WebFaultException<Error>(
+                        new Error(string.Format("'{0}' is not a valid contact identifier", contactIdStr)),
                         HttpStatusCode.BadRequest));
                 }
 
@@ -559,8 +560,8 @@ namespace PartyService
 
                 if (r == null)
                 {
-                    throw (new PartyServiceException(
-                        string.Format("Party {0} is not linked to contact {1}", partyId, contactId),
+                    throw (new WebFaultException<Error>(
+                        new Error(string.Format("Party {0} is not linked to contact {1}", partyId, contactId)),
                         HttpStatusCode.NotFound));
                 }
 
@@ -570,7 +571,7 @@ namespace PartyService
             }
             catch (Exception ex)
             {
-                return (PartyContact)ErrorObject(partyContact, ex);
+                throw MakeWebFaultException(ex);
             }
 
         }
@@ -587,15 +588,15 @@ namespace PartyService
 
                 if (!int.TryParse(partyIdStr, out partyId))
                 {
-                    throw (new PartyServiceException(
-                        string.Format("'{0}' is not a valid party identifier", partyIdStr),
+                    throw (new WebFaultException<Error>(
+                        new Error(string.Format("'{0}' is not a valid party identifier", partyIdStr)),
                         HttpStatusCode.BadRequest));
                 }
 
                 if (!int.TryParse(contactIdStr, out contactId))
                 {
-                    throw (new PartyServiceException(
-                        string.Format("'{0}' is not a valid contact identifier", contactIdStr),
+                    throw (new WebFaultException<Error>(
+                        new Error(string.Format("'{0}' is not a valid contact identifier", contactIdStr)),
                         HttpStatusCode.BadRequest));
                 }
 
@@ -603,8 +604,8 @@ namespace PartyService
 
                 if (r == null)
                 {
-                    throw (new PartyServiceException(
-                        string.Format("Party {0} is not linked to contact {1}", partyId, contactId),
+                    throw (new WebFaultException<Error>(
+                        new Error(string.Format("Party {0} is not linked to contact {1}", partyId, contactId)),
                         HttpStatusCode.NotFound));
                 }
 
@@ -615,15 +616,15 @@ namespace PartyService
             }
             catch (Exception ex)
             {
-                return (Acknowledgement)ErrorObject(new Acknowledgement(), ex);
+               throw MakeWebFaultException(ex);
             }
 
         }
 
-        [WebGet(UriTemplate="/party/{idStr}/contacts")]
+        [WebGet(UriTemplate = "/party/{idStr}/contacts")]
         [OperationContract]
         public ContactResults GetPartyContacts(string idStr)
-        { 
+        {
             try
             {
 
@@ -632,8 +633,8 @@ namespace PartyService
 
                 if (!int.TryParse(idStr, out id))
                 {
-                    throw (new PartyServiceException(
-                        string.Format("'{0}' is not a valid party identifier", idStr),
+                    throw (new WebFaultException<Error>(
+                        new Error(string.Format("'{0}' is not a valid party identifier", idStr)),
                         HttpStatusCode.BadRequest));
                 }
 
@@ -646,38 +647,30 @@ namespace PartyService
                     int contactId = Convert.ToInt32(r["id"]);
                     string type = Convert.ToString(r["sub_type"]);
                     string detail = Convert.ToString(r["detail"]);
-                    string link = string.Format("{0}contacts/{1}", 
+                    string link = string.Format("{0}contacts/{1}",
                         baseUrl, contactId);
 
                     contactResults.ContactList.Add
-                        (new ContactSummary(id, type, detail,link));
+                        (new ContactSummary(id, type, detail, link));
                 }
 
                 return contactResults;
-                        
+
             }
             catch (Exception ex)
             {
-                return (ContactResults)ErrorObject(new ContactResults(), ex);
+                throw MakeWebFaultException( ex);
             }
         }
 
-        private PartyServiceObject ErrorObject(PartyServiceObject pso, Exception ex, HttpStatusCode statusCode)
+   
+        private WebFaultException<Error> MakeWebFaultException(Exception ex)
         {
-            pso.Error = new Error(ex.Message);
-            WebOperationContext.Current.OutgoingResponse.StatusCode = statusCode;
-            return pso;
+            return (ex is WebFaultException<Error>) ?
+                (WebFaultException<Error>)ex :
+                new WebFaultException<Error>(
+                    new Error(ex.Message), HttpStatusCode.InternalServerError);
         }
 
-        private PartyServiceObject ErrorObject(PartyServiceObject pso, Exception ex)
-        {
-            if (ex is PartyServiceException)
-            {
-                return ErrorObject(pso, ex,
-                    ((PartyServiceException)ex).StatusCode);
-            }
-            return ErrorObject(pso, ex, HttpStatusCode.InternalServerError);
-        }
-      
     }
 }

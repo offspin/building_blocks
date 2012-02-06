@@ -2,16 +2,12 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Xml.Serialization;
+using System.Runtime.Serialization;
 
 namespace PartyService
 {
 
-    public class PartyServiceObject
-    {
-        public Error Error { get; set; }
-    }
-
-    public class Party : PartyServiceObject
+    public class Party
     {
         [XmlAttribute]
         public int Id { get; set; }
@@ -56,7 +52,7 @@ namespace PartyService
         }
     }
 
-    public class Contact : PartyServiceObject
+    public class Contact
     {
         [XmlAttribute]
         public int Id { get; set; }
@@ -118,7 +114,7 @@ namespace PartyService
         }
     }
 
-    public class PartyContact : PartyServiceObject
+    public class PartyContact
     {
         [XmlAttribute]
         public int PartyId { get; set; }
@@ -178,7 +174,7 @@ namespace PartyService
 
     }
 
-    public class PartyResults : PartyServiceObject
+    public class PartyResults
     {
         public PartyResults() { this.PartyList = new List<PartySummary>(); }
 
@@ -186,7 +182,7 @@ namespace PartyService
         public List<PartySummary> PartyList { get; set; }
     }
 
-    public class ContactResults : PartyServiceObject
+    public class ContactResults
     {
         public ContactResults() { this.ContactList = new List<ContactSummary>(); }
 
@@ -194,7 +190,7 @@ namespace PartyService
         public List<ContactSummary> ContactList { get; set; }
     }
 
-    public class Acknowledgement : PartyServiceObject
+    public class Acknowledgement
     {
         public string Message { get; set; }
 
@@ -205,9 +201,13 @@ namespace PartyService
         }
     }
 
+   
+    [DataContract(Namespace="")]
     public class Error
     {
+        [DataMember(EmitDefaultValue=false)]
         public string Name { get; set; }
+        [DataMember]
         public string Message { get; set; }
 
         public Error() { }
@@ -221,23 +221,6 @@ namespace PartyService
         }
     }
 
-    public class PartyServiceException : Exception
-    {
-        public System.Net.HttpStatusCode StatusCode { get; set; }
-
-        public PartyServiceException() { }
-
-        public PartyServiceException(string message)
-            : base(message)
-        {
-            StatusCode = System.Net.HttpStatusCode.InternalServerError;
-        }
-
-        public PartyServiceException(string message, System.Net.HttpStatusCode statusCode)
-            : base(message)
-        {
-            StatusCode = statusCode;
-        }
-    }
+ 
 
 }
