@@ -1,6 +1,6 @@
 xml.instruct!
 
-xml.acknowledge do 
-    xml.message message
+xml.Acknowledge do 
+    xml.Message message
 end
 

@@ -1,7 +1,7 @@
 xml.instruct!
 
-xml.error do
-    xml.name name if name
-    xml.message message
+xml.Error do
+    xml.Name name if name
+    xml.Message message
 end
 

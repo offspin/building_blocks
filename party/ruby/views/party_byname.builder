@@ -1,9 +1,10 @@
 xml.instruct!
-xml.parties do
+
+xml.PartyResults do
     parties.each do |p|
-        xml.party('id' => p['id'], 'type' => p['type']) do
-            xml.link url("/party/#{p['id']}")
-            xml.name p['name']
+        xml.PartySummary('Id' => p['id'], 'Type' => p['type']) do
+            xml.Name p['name']
+            xml.Link url("/party/#{p['id']}")
         end
     end
 end

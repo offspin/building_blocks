@@ -1,18 +1,16 @@
 xml.instruct!
 
 if party['type'] == 'P'
-    xml.person do 
-        xml.party_id party['id']
-        xml.first_name party['first_name']
-        xml.last_name party['last_name']
-        xml.date_of_birth party['date_of_birth']
+    xml.Person('Id' => party['id'], 'Type' => party['type']) do 
+        xml.FirstName party['first_name']
+        xml.LastName party['last_name']
+        xml.DateOfBirth party['date_of_birth']
     end
 end
 
 if party['type'] == 'B'
-    xml.business do
-        xml.party_id party['id']
-        xml.name party['name']
+    xml.Business('Id' => party['id'], 'Type' => party['type']) do
+        xml.Name party['name']
     end
 end
 
