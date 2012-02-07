@@ -126,7 +126,7 @@ namespace PartyService
             }
         }
 
-        public int CreateBusiness(string name)
+        public int CreateBusiness(string name, string regNumber)
         {
             SqlConnection cn = Connect();
            
@@ -140,6 +140,7 @@ namespace PartyService
                     cmd.Parameters.Add("@Id", SqlDbType.Int);
                     cmd.Parameters["@Id"].Direction = ParameterDirection.Output;
                     cmd.Parameters.AddWithValue("@Name", name);
+                    cmd.Parameters.AddWithValue("@RegNumber", regNumber);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.ExecuteNonQuery();
                     newId = cmd.Parameters["@Id"].Value;
@@ -153,7 +154,7 @@ namespace PartyService
             }
         }
 
-        public void UpdateBusiness(int id, string name)
+        public void UpdateBusiness(int id, string name, string regNumber)
         {
             SqlConnection cn = Connect();
 
@@ -164,6 +165,7 @@ namespace PartyService
                 {
                     cmd.Parameters.AddWithValue("@Id", id);
                     cmd.Parameters.AddWithValue("@Name", name);
+                    cmd.Parameters.AddWithValue("@RegNumber", regNumber);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.ExecuteNonQuery();
                 }

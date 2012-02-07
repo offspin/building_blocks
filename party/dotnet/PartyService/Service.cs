@@ -65,7 +65,8 @@ namespace PartyService
                         return new Person(id, firstName, lastName, dateOfBirth);
                     case "B":
                         string name = Convert.ToString(r["name"]);
-                        return new Business(id, name);
+                        string regNumber = Convert.ToString(r["reg_number"]);
+                        return new Business(id, name, regNumber);
                     default:
                         throw (new Exception(
                             string.Format("Unknown party type '{0}' retrieved", type)));
@@ -166,7 +167,7 @@ namespace PartyService
         {
             try
             {
-                int newId = database.CreateBusiness(business.Name);
+                int newId = database.CreateBusiness(business.Name, business.RegNumber);
                 return (Business)GetParty(Convert.ToString(newId));
             }
             catch (Exception ex)
@@ -195,7 +196,7 @@ namespace PartyService
                     throw (new Exception(string.Format("Business {0} not found", id)));
                 }
 
-                database.UpdateBusiness(id, business.Name);
+                database.UpdateBusiness(id, business.Name, business.RegNumber);
 
                 return (Business)GetParty(idStr);
             }

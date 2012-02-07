@@ -11,8 +11,8 @@ namespace PartyService
         DataTable GetPartyByName(string name);
         int CreatePerson(string firstName, string lastName, DateTime dateOfBirth);
         void UpdatePerson(int id, string firstname, string lastname, DateTime dateOfBirth);
-        int CreateBusiness(string name);
-        void UpdateBusiness(int id, string name);
+        int CreateBusiness(string name, string regNumber);
+        void UpdateBusiness(int id, string name, string regNumber);
         void DeleteParty(int id);
         DataRow GetContact(int id);
         DataTable GetContactByPartyId(int partyId);

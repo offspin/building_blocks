@@ -43,12 +43,14 @@ namespace PartyService
     public class Business : Party
     {
         public string Name { get; set; }
+        public string RegNumber { get; set; }
 
         public Business() { }
-        public Business(int id, string name)
+        public Business(int id, string name, string regNumber)
             : base(id, "B")
         {
             Name = name;
+            RegNumber = regNumber;
         }
     }
 
