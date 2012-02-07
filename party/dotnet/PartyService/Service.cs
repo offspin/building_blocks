@@ -628,7 +628,7 @@ namespace PartyService
                         baseUrl, contactId);
 
                     contactResults.ContactList.Add
-                        (new ContactSummary(id, type, detail, link));
+                        (new ContactSummary(contactId, type, detail, link));
                 }
 
                 return contactResults;
