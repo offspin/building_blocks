@@ -334,6 +334,19 @@ module Party
 
         end
 
+        def update_telephone(contact_id, number, type)
+
+            sql = <<-EOS
+                update telephone
+                set    number = $2,
+                       type = $3
+                where  contact_id = $1;
+            EOS
+
+            @connection.exec(sql, [contact_id, number, type])
+
+        end
+
         def create_email(address, type)
 
             contact_sql = <<-EOS
@@ -358,6 +371,20 @@ module Party
             return contact_id.to_i
 
         end
+
+        def update_email(contact_id, address, type)
+
+            sql = <<-EOS
+                update email
+                set    address = $2,
+                       type = $3
+                where  contact_id = $1;
+            EOS
+
+            @connection.exec(sql, [contact_id, address, type])
+
+        end
+
 
         def delete_contact(contact_id)
 
