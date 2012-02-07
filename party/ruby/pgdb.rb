@@ -49,6 +49,7 @@ module Party
 
             sql = <<-EOS
                select p.party_id as id,
+                      'P' as type,
                       p.full_name as name
                from   person as p
                where (
@@ -59,7 +60,9 @@ module Party
                 ( to_tsvector('english', p.full_name) @@ plainto_tsquery('english', $1 ) )
               )
               union
-              select b.party_id, b.name
+              select b.party_id, 
+                     'B' as type,
+                     b.name
               from   business as b
               where  to_tsvector('english', b.name) @@ plainto_tsquery('english', $1)
               order by 2, 1 ;
