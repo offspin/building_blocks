@@ -7019,7 +7019,7 @@
 32019	ac.libero@Praesenteunulla.org	B
 32020	Fusce.mi@elit.org	B
 32021	arcu.Vivamus.sit@hendreritconsectetuercursus.com	B
-32022	a@mauris.org	B
+32022	azs@mauris.org	B
 32023	cursus.in.hendrerit@egetlacusMauris.org	B
 32024	Nullam@DonecegestasAliquam.edu	B
 32025	libero.Integer@Phasellus.ca	B
@@ -7464,7 +7464,7 @@
 32464	sagittis.augue@Duisgravida.edu	B
 32465	massa.non@sollicitudinamalesuada.edu	B
 32466	eu.metus@sempereratin.edu	B
-32467	Ut@semper.org	B
+32467	Utx@semper.org	B
 32468	Phasellus@nonummyFuscefermentum.org	B
 32469	est.arcu.ac@Nulla.com	B
 32470	egestas.nunc.sed@veliteusem.edu	B
@@ -7865,7 +7865,7 @@
 32865	ultricies@Aliquamadipiscing.edu	B
 32866	feugiat.placerat.velit@telluseu.org	B
 32867	nunc.risus@dolorDonecfringilla.com	B
-32868	nulla@tincidunt.org	B
+32868	nullae@tincidunt.org	B
 32869	augue.Sed@nonhendrerit.org	B
 32870	orci.Donec@turpis.org	B
 32871	magnis@acmattis.ca	B
@@ -11662,7 +11662,7 @@
 41662	Integer@molestie.com	B
 41663	In@sedconsequatauctor.com	B
 41664	et.ultrices.posuere@InfaucibusMorbi.org	B
-41665	morbi@magna.org	B
+41665	morbig@magna.org	B
 41666	a@vitaealiquet.ca	B
 41667	at@Fuscedolor.com	B
 41668	nunc.sed@egestasDuisac.edu	B
