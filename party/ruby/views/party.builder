@@ -11,6 +11,7 @@ end
 if party['type'] == 'B'
     xml.Business('Id' => party['id'], 'Type' => party['type']) do
         xml.Name party['name']
+        xml.RegNumber party['reg_number']
     end
 end
 

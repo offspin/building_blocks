@@ -126,8 +126,9 @@ module Party
             xml = REXML::Document.new(request.body.read)
 
             name = xml.get_text('/Business/Name')
+            reg_number = xml.get_text('/Business/RegNumber')
 
-            party_id = THE_DB.create_business(name)
+            party_id = THE_DB.create_business(name, reg_number)
 
             if party_id
                 redirect url("/party/#{party_id}")
@@ -142,11 +143,12 @@ module Party
             xml = REXML::Document.new(request.body.read)
 
             name = xml.get_text('/Business/Name')
+            reg_number = xml.get_text('/Business/RegNumber')
 
             pty = THE_DB.get_party(party_id)
             not_found unless pty
             raise "Party #{party_id} is not a business" unless pty['type'] == 'B'
-            THE_DB.update_business(party_id, name)
+            THE_DB.update_business(party_id, name, reg_number)
 
             redirect url("/party/#{party_id}")
 
