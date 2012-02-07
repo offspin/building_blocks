@@ -43,14 +43,25 @@ module Party
 
         end
 
+        get '/party/:party_id/contact/:contact_id' do
+
+            party_id = params[:party_id]
+            contact_id = params[:contact_id]
+
+            res = THE_DB.get_party_contact(party_id, contact_id)
+
+            builder :party_contact, :locals => { :party_contact => res }
+
+        end
+
         post '/party/:party_id/contact/:contact_id' do
 
-            xml = REXML::Document.new(params.to_s)
+            xml = REXML::Document.new(request.body.read)
 
             party_id = params[:party_id].to_i
             contact_id = params[:contact_id].to_i
-            valid_from = xml.get_text('/party_contact/valid_from')
-            valid_until = xml.get_text('/party_contact/valid_until')
+            valid_from = xml.get_text('/PartyContact/ValidFrom')
+            valid_until = xml.get_text('/PartyContact/ValidUntil')
 
             if THE_DB.get_party_contact(party_id, contact_id)
                 THE_DB.update_party_contact(party_id, contact_id, valid_from, valid_until)
@@ -58,8 +69,8 @@ module Party
                 THE_DB.create_party_contact(party_id, contact_id, valid_from, valid_until)
             end
 
-            builder :acknowledge, :locals => { :message => "Contact #{contact_id} added to party #{party_id}" }
-            
+            redirect url("/party/#{party_id}/contact/#{contact_id}")
+
         end
 
         post '/party/:party_id/contact/:contact_id/delete' do
@@ -76,22 +87,14 @@ module Party
         end
 
         post '/person' do
+            
+            xml = REXML::Document.new(request.body.read)
 
-            xml = REXML::Document.new(params.to_s)
+            first_name = xml.get_text('/Person/FirstName')
+            last_name = xml.get_text('/Person/LastName')
+            date_of_birth = xml.get_text('/Person/DateOfBirth')
 
-            party_id = xml.get_text('/person/party_id')
-            first_name = xml.get_text('/person/first_name')
-            last_name = xml.get_text('/person/last_name')
-            date_of_birth = xml.get_text('/person/date_of_birth')
-
-            if party_id 
-                pty = THE_DB.get_party(party_id)
-                not_found unless pty
-                raise "Party #{party_id} is not a person" unless pty['type'] == 'P'
-                THE_DB.update_person(party_id, first_name, last_name, date_of_birth)
-            else
-                party_id = THE_DB.create_person(first_name, last_name, date_of_birth)
-            end
+            party_id = THE_DB.create_person(first_name, last_name, date_of_birth)
 
             if party_id
                 redirect url("/party/#{party_id}")
@@ -99,25 +102,53 @@ module Party
 
         end
 
+        post '/person/:id' do
+
+            party_id = params[:id]
+
+            xml = REXML::Document.new(request.body.read)
+
+            first_name = xml.get_text('/Person/FirstName')
+            last_name = xml.get_text('/Person/LastName')
+            date_of_birth = xml.get_text('/Person/DateOfBirth')
+
+            pty = THE_DB.get_party(party_id)
+            not_found unless pty
+            raise "Party #{party_id} is not a person" unless pty['type'] == 'P'
+            THE_DB.update_person(party_id, first_name, last_name, date_of_birth)
+
+            redirect url("/party/#{party_id}")
+
+        end
+
         post '/business' do
 
-            xml = REXML::Document.new(params.to_s)
+            xml = REXML::Document.new(request.body.read)
 
-            party_id = xml.get_text('/business/party_id')
-            name = xml.get_text('/business/name')
+            name = xml.get_text('/Business/Name')
 
-            if party_id
-                pty = THE_DB.get_party(party_id)
-                not_found unless pty
-                raise "Party #{party_id} is not a business" unless pty['type'] == 'B'
-                THE_DB.update_business(party_id, name)
-            else
-                party_id = THE_DB.create_business(name)
-            end
+            party_id = THE_DB.create_business(name)
 
             if party_id
                 redirect url("/party/#{party_id}")
             end
+
+        end
+
+        post '/business/:id' do
+
+            party_id = params[:id]
+
+            xml = REXML::Document.new(request.body.read)
+
+            name = xml.get_text('/Business/Name')
+
+            pty = THE_DB.get_party(party_id)
+            not_found unless pty
+            raise "Party #{party_id} is not a business" unless pty['type'] == 'B'
+            THE_DB.update_business(party_id, name)
+
+            redirect url("/party/#{party_id}")
 
         end
 
@@ -175,11 +206,11 @@ module Party
 
             xml = REXML::Document.new(params.to_s)
 
-            contact_id = xml.get_text('/address/contact_id')
-            street = xml.get_text('/address/street')
-            town = xml.get_text('/address/town')
-            county = xml.get_text('/address/county')
-            post_code = xml.get_text('/address/post_code')
+            contact_id = xml.get_text('/Address/@Id')
+            street = xml.get_text('/Address/Street')
+            town = xml.get_text('/Address/Town')
+            county = xml.get_text('/Address/County')
+            post_code = xml.get_text('/Address/PostCode')
 
             if contact_id
                 ct = THE_DB.get_contact(contact_id)
@@ -198,49 +229,68 @@ module Party
 
         post '/telephone' do
 
-            xml = REXML::Document.new(params.to_s)
+            xml = REXML::Document.new(request.body.read)
 
-            contact_id = xml.get_text('/telephone/contact_id')
-            number = xml.get_text('/telephone/number')
-            type = xml.get_text('/telephone/type')
+            number = xml.get_text('/Telephone/Number')
+            type = xml.get_text('/Telephone/SubType')
 
-            if contact_id
-                ct = THE_DB.get_contact(contact_id)
-                not_found unless ct
-                raise "Contact #{contact_id} is not a telephone" unless ct['type'] == 'T'
-                THE_DB.update_telephone(contact_id, number, type)
-            else
-                contact_id = THE_DB.create_telephone(number, type)
-            end
+            contact_id = THE_DB.create_telephone(number, type)
 
             if contact_id
                 redirect url("/contact/#{contact_id}")
             end
+
+        end
+
+        post '/telephone/:id' do
+
+            contact_id = params[:id]
+            xml = REXML::Document.new(request.body.read)
+
+            number = xml.get_text('/Telephone/Number')
+            type = xml.get_text('/Telephone/SubType')
+
+            ct = THE_DB.get_contact(contact_id)
+            not_found unless ct
+            raise "Contact #{contact_id} is not a telephone" unless ct['type'] == 'T'
+            THE_DB.update_telephone(contact_id, number, type)
+
+            redirect url("/contact/#{contact_id}")
 
         end
 
         post '/email' do
 
-            xml = REXML::Document.new(params.to_s)
+            xml = REXML::Document.new(request.body.read)
 
-            contact_id = xml.get_text('/email/contact_id')
-            address = xml.get_text('/email/address')
-            type = xml.get_text('/email/type')
+            address = xml.get_text('/Email/Address')
+            type = xml.get_text('/Email/SubType')
 
-            if contact_id
-                ct = THE_DB.get_contact(contact_id)
-                not_found unless ct
-                raise "Contact #{contact_id} is not an email" unless ct['type'] == 'E'
-                THE_DB.update_email(contact_id, address, type)
-            else
-                contact_id = THE_DB.create_email(address, type)
-            end
+            contact_id = THE_DB.create_email(address, type)
 
             if contact_id
                 redirect url("/contact/#{contact_id}")
             end
 
         end
+
+        post '/email/:id' do
+
+            xml = REXML::Document.new(request.body.read)
+
+            contact_id = params[:id]
+
+            address = xml.get_text('/Email/Address')
+            type = xml.get_text('/Email/SubType')
+
+            ct = THE_DB.get_contact(contact_id)
+            not_found unless ct
+            raise "Contact #{contact_id} is not an email" unless ct['type'] == 'E'
+            THE_DB.update_email(contact_id, address, type)
+            redirect url("/contact/#{contact_id}")
+
+        end
+
 
         post '/contact/:id/delete' do
             
