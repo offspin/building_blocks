@@ -41,7 +41,7 @@ namespace PartyService
                 if (!int.TryParse(idStr, out id))
                 {
                     throw (new WebFaultException<Error>(
-                        new Error(string.Format("'{0}' is not a valid party idenfifier", idStr)),
+                        new Error(string.Format("'{0}' is not a valid party identifier", idStr)),
                         HttpStatusCode.BadRequest));
                 }
 
@@ -509,29 +509,6 @@ namespace PartyService
 
         }
 
-        [WebInvoke(UriTemplate = "/party/contact")]
-        [OperationContract]
-        PartyContact CreatePartyContact(PartyContact partyContact)
-        {
-
-            try
-            {
-                database.CreatePartyContact(
-                    partyContact.PartyId, partyContact.ContactId,
-                    partyContact.ValidFrom, partyContact.ValidUntil);
-
-                return GetPartyContact(
-                    Convert.ToString(partyContact.PartyId),
-                    Convert.ToString(partyContact.ContactId));
-
-            }
-            catch (Exception ex)
-            {
-                throw MakeWebFaultException(ex);
-            }
-
-        }
-
         [WebInvoke(UriTemplate = "/party/{partyIdStr}/contact/{contactIdStr}")]
         [OperationContract]
         PartyContact UpdatePartyContact(string partyIdStr, string contactIdStr, PartyContact partyContact)
@@ -560,13 +537,12 @@ namespace PartyService
 
                 if (r == null)
                 {
-                    throw (new WebFaultException<Error>(
-                        new Error(string.Format("Party {0} is not linked to contact {1}", partyId, contactId)),
-                        HttpStatusCode.NotFound));
+                    database.CreatePartyContact(partyId, contactId, partyContact.ValidFrom, partyContact.ValidUntil);
                 }
-
-                database.UpdatePartyContact(partyId, contactId, partyContact.ValidFrom, partyContact.ValidUntil);
-
+                else
+                {
+                    database.UpdatePartyContact(partyId, contactId, partyContact.ValidFrom, partyContact.ValidUntil);
+                }
                 return GetPartyContact(partyIdStr, contactIdStr);
             }
             catch (Exception ex)
