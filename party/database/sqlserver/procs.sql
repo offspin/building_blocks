@@ -13,6 +13,7 @@ begin
     select p.id,
            p.type,
            b.name,
+           b.reg_number,
            pr.first_name,
            pr.last_name,
            pr.date_of_birth
@@ -57,7 +58,7 @@ begin
     union
     select b.party_id as id,
            'B' as type,
-           b.name
+           b.name + ' (' + b.reg_number + ')'
     from   business as b
     where  contains(*, @search)
     order by 2, 1
@@ -158,7 +159,8 @@ go
 
 create procedure dbo.CreateBusiness
     @Id int output,
-    @Name varchar(60)
+    @Name varchar(60),
+    @RegNumber varchar(30)
 as
 begin
 
@@ -178,8 +180,8 @@ begin
         set @Id = scope_identity()
 
         insert into dbo.business
-        (party_id, name)
-        values (@Id, @Name)
+        (party_id, name, reg_number)
+        values (@Id, @Name, @RegNumber)
 
         if @InTrans = 0 commit
 
@@ -209,12 +211,14 @@ go
 
 create procedure dbo.UpdateBusiness
     @Id int,
-    @Name varchar(60)
+    @Name varchar(60),
+    @RegNumber varchar(30)
 as
 begin
 
     update dbo.business
-    set    name = @Name
+    set    name = @Name,
+           reg_number = @RegNumber
     where  party_id = @Id
 
 end

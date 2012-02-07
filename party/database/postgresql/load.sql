@@ -11,11 +11,3 @@
 select setval('party_sequence', 1 + (select max(id) from party));
 select setval('contact_sequence', 1 + (select max(id) from contact));
 
-insert into system_config(name, string_value) values ('REALM', 'Party Service');
-insert into system_config(name, string_value) values ('OPAQUE', 'partypizza');
-
-insert into user_of_system(name, full_name, password_hash)
-select 'admin', 'Administrator',
-       md5('admin:' || string_value || ':admin')
-from   system_config
-where  name = 'REALM';

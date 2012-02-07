@@ -40,8 +40,9 @@ create table business
 (
     party_id integer not null,
     name varchar(60) not null,
+    reg_number varchar(30) not null,
     constraint pk_business primary key(party_id),
-    constraint ak_business unique(name),
+    constraint ak_business unique(name, reg_number),
     constraint fk_business_party 
        foreign key(party_id) references party(id)
 );
