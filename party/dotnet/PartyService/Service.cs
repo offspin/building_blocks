@@ -45,33 +45,16 @@ namespace PartyService
                         HttpStatusCode.BadRequest));
                 }
 
-                DataRow r = database.GetParty(id);
+                Party p = database.GetParty(id);
 
-                if (r == null)
+                if (p == null)
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("Party {0} not found", id)),
                         HttpStatusCode.NotFound));
                 }
 
-                string type = Convert.ToString(r["type"]);
-
-                switch (type)
-                {
-                    case "P":
-                        string firstName = Convert.ToString(r["first_name"]);
-                        string lastName = Convert.ToString(r["last_name"]);
-                        DateTime dateOfBirth = Convert.ToDateTime(r["date_of_birth"]);
-                        return new Person(id, firstName, lastName, dateOfBirth);
-                    case "B":
-                        string name = Convert.ToString(r["name"]);
-                        string regNumber = Convert.ToString(r["reg_number"]);
-                        return new Business(id, name, regNumber);
-                    default:
-                        throw (new Exception(
-                            string.Format("Unknown party type '{0}' retrieved", type)));
-                }
-
+                return p;
             }
             catch (Exception ex)
             {
@@ -88,24 +71,10 @@ namespace PartyService
             {
                 string baseUrl = WebOperationContext.Current.IncomingRequest.UriTemplateMatch.BaseUri.AbsoluteUri;
 
-                PartyResults pl = new PartyResults();
+                PartyResults partyResults = database.GetPartyByName(name, baseUrl);
 
-                DataTable t = database.GetPartyByName(name);
+                return partyResults;
 
-                if (t == null) { return pl; }
-
-                foreach (DataRow r in t.Rows)
-                {
-                    int id = Convert.ToInt32(r["id"]);
-                    string type = Convert.ToString(r["type"]);
-                    string partyName = Convert.ToString(r["name"]);
-                    string link = string.Format("{0}party/{1}", baseUrl, id);
-
-                    PartySummary ps = new PartySummary(id, type, partyName, link);
-                    pl.PartyList.Add(ps);
-                }
-
-                return pl;
             }
             catch (Exception ex)
             {
@@ -260,36 +229,17 @@ namespace PartyService
                         HttpStatusCode.BadRequest));
                 }
 
-                DataRow r = database.GetContact(id);
+                Contact c = database.GetContact(id);
 
-                if (r == null)
+                if (c == null)
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("Contact {0} not found", id)),
                         HttpStatusCode.NotFound));
                 }
 
-                string type = Convert.ToString(r["type"]);
-                string subType = Convert.ToString(r["sub_type"]);
-                string street = Convert.ToString(r["street"]);
-                string town = Convert.ToString(r["town"]);
-                string county = Convert.ToString(r["county"]);
-                string postCode = Convert.ToString(r["post_code"]);
-                string emailAddress = Convert.ToString(r["email_address"]);
-                string telephoneNumber = Convert.ToString(r["telephone_number"]);
-
-                switch (type)
-                {
-                    case "A":
-                        return new Address(id, street, town, county, postCode);
-                    case "E":
-                        return new Email(id, subType, emailAddress);
-                    case "T":
-                        return new Telephone(id, subType, telephoneNumber);
-                    default:
-                        throw (new Exception(
-                        string.Format("Unknown contact type '{0}' retrieved", type)));
-                }
+                return c;
+                
             }
             catch (Exception ex)
             {
@@ -496,20 +446,17 @@ namespace PartyService
                         HttpStatusCode.BadRequest));
                 }
 
-                DataRow r = database.GetPartyContact(partyId, contactId);
+                PartyContact partyContact = database.GetPartyContact(partyId, contactId);
 
-                if (r == null)
+                if (partyContact == null)
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("Party {0} is not linked to contact {1}", partyId, contactId)),
                         HttpStatusCode.NotFound));
                 }
 
-                return new PartyContact(
-                    Convert.ToInt32(r["party_id"]),
-                    Convert.ToInt32(r["contact_id"]),
-                    Convert.ToDateTime(r["valid_from"]),
-                    Convert.ToDateTime(r["valid_until"]));
+                return partyContact;
+
             }
             catch (Exception ex)
             {
@@ -542,9 +489,9 @@ namespace PartyService
                         HttpStatusCode.BadRequest));
                 }
 
-                DataRow r = database.GetPartyContact(partyId, contactId);
+                PartyContact pc = database.GetPartyContact(partyId, contactId);
 
-                if (r == null)
+                if (pc == null)
                 {
                     database.CreatePartyContact(partyId, contactId, partyContact.ValidFrom, partyContact.ValidUntil);
                 }
@@ -585,9 +532,9 @@ namespace PartyService
                         HttpStatusCode.BadRequest));
                 }
 
-                DataRow r = database.GetPartyContact(partyId, contactId);
+                PartyContact pc = database.GetPartyContact(partyId, contactId);
 
-                if (r == null)
+                if (pc == null)
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("Party {0} is not linked to contact {1}", partyId, contactId)),
@@ -623,22 +570,8 @@ namespace PartyService
                         HttpStatusCode.BadRequest));
                 }
 
-                ContactResults contactResults = new ContactResults();
-
-                DataTable t = database.GetContactByPartyId(id);
-
-                foreach (DataRow r in t.Rows)
-                {
-                    int contactId = Convert.ToInt32(r["id"]);
-                    string type = Convert.ToString(r["sub_type"]);
-                    string detail = Convert.ToString(r["detail"]);
-                    string link = string.Format("{0}contacts/{1}",
-                        baseUrl, contactId);
-
-                    contactResults.ContactList.Add
-                        (new ContactSummary(contactId, type, detail, link));
-                }
-
+                ContactResults contactResults = database.GetContactByPartyId(id, baseUrl);
+              
                 return contactResults;
 
             }

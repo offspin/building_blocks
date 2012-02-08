@@ -7,15 +7,15 @@ namespace PartyService
     public interface IDatabase
     {
         void setConnectionString(string connectionString);
-        DataRow GetParty(int id);
-        DataTable GetPartyByName(string name);
+        Party GetParty(int id);
+        PartyResults GetPartyByName(string name, string baseUrl);
         int CreatePerson(string firstName, string lastName, DateTime dateOfBirth);
         void UpdatePerson(int id, string firstname, string lastname, DateTime dateOfBirth);
         int CreateBusiness(string name, string regNumber);
         void UpdateBusiness(int id, string name, string regNumber);
         void DeleteParty(int id);
-        DataRow GetContact(int id);
-        DataTable GetContactByPartyId(int partyId);
+        Contact GetContact(int id);
+        ContactResults GetContactByPartyId(int partyId, string baseUrl);
         int CreateAddress(string street, string town, string county, string postCode);
         void UpdateAddress(int id, string street, string town, string county, string postCode);
         int CreateEmail(string type, string address);
@@ -23,7 +23,7 @@ namespace PartyService
         int CreateTelephone(string type, string number);
         void UpdateTelephone(int id, string type, string number);
         void DeleteContact(int id);
-        DataRow GetPartyContact(int partyId, int contactId);
+        PartyContact GetPartyContact(int partyId, int contactId);
         void CreatePartyContact(int partyId, int contactId, DateTime validFrom, DateTime validUntil);
         void UpdatePartyContact(int partyId, int contactId, DateTime validFrom, DateTime validUntil);
         void DeletePartyContact(int partyId, int contactId);

@@ -26,7 +26,7 @@ namespace PartyService
             if (cn != null) { cn.Close(); }
         }
 
-        public DataRow GetParty(int id)
+        public Party GetParty(int id)
         {
             DataSet ds = new DataSet();
             SqlConnection cn = Connect();
@@ -42,7 +42,28 @@ namespace PartyService
                         da.Fill(ds);
                     }
                 }
-                return FirstRow(ds);
+                
+                DataRow r = FirstRow(ds);
+
+                if (r == null) { return null; }
+
+                string type = Convert.ToString(r["type"]);
+
+                switch (type)
+                {
+                    case "P":
+                        string firstName = Convert.ToString(r["first_name"]);
+                        string lastName = Convert.ToString(r["last_name"]);
+                        DateTime dateOfBirth = Convert.ToDateTime(r["date_of_birth"]);
+                        return new Person(id, firstName, lastName, dateOfBirth);
+                    case "B":
+                        string name = Convert.ToString(r["name"]);
+                        string regNumber = Convert.ToString(r["reg_number"]);
+                        return new Business(id, name, regNumber);
+                    default:
+                        throw (new Exception(
+                            string.Format("Unknown party type '{0}' retrieved", type)));
+                }
             }
             finally
             {
@@ -50,7 +71,7 @@ namespace PartyService
             }
         }
 
-        public DataTable GetPartyByName(string name)
+        public PartyResults GetPartyByName(string name, string baseUrl)
         {
             DataSet ds = new DataSet();
             SqlConnection cn = Connect();
@@ -66,8 +87,28 @@ namespace PartyService
                         da.Fill(ds);
                     }
                 }
-                return FirstTable(ds);
+                
+                PartyResults pr = new PartyResults();
+                
+                DataTable t = FirstTable(ds);
+
+                if (t == null) { return pr; }
+
+                foreach (DataRow r in t.Rows)
+                {
+                    int id = Convert.ToInt32(r["id"]);
+                    string type = Convert.ToString(r["type"]);
+                    string partyName = Convert.ToString(r["name"]);
+                    string link = string.Format("{0}party/{1}", baseUrl, id);
+
+                    PartySummary ps = new PartySummary(id, type, partyName, link);
+                    pr.PartyList.Add(ps);
+                }
+
+                return pr;
+
             }
+
             finally
             {
                 Disconnect(cn);
@@ -197,7 +238,7 @@ namespace PartyService
 
         }
 
-        public DataRow GetContact(int id)
+        public Contact GetContact(int id)
         {
             SqlConnection cn = Connect();
             DataSet ds = new DataSet();
@@ -214,7 +255,31 @@ namespace PartyService
                     }
                 }
 
-                return FirstRow(ds);
+                DataRow r = FirstRow(ds);
+
+                if (r == null) { return null; }
+
+                string type = Convert.ToString(r["type"]);
+                string subType = Convert.ToString(r["sub_type"]);
+                string street = Convert.ToString(r["street"]);
+                string town = Convert.ToString(r["town"]);
+                string county = Convert.ToString(r["county"]);
+                string postCode = Convert.ToString(r["post_code"]);
+                string emailAddress = Convert.ToString(r["email_address"]);
+                string telephoneNumber = Convert.ToString(r["telephone_number"]);
+
+                switch (type)
+                {
+                    case "A":
+                        return new Address(id, street, town, county, postCode);
+                    case "E":
+                        return new Email(id, subType, emailAddress);
+                    case "T":
+                        return new Telephone(id, subType, telephoneNumber);
+                    default:
+                        throw (new Exception(
+                        string.Format("Unknown contact type '{0}' retrieved", type)));
+                }
             }
             finally
             {
@@ -223,7 +288,7 @@ namespace PartyService
 
         }
 
-        public DataTable GetContactByPartyId(int partyId)
+        public ContactResults GetContactByPartyId(int partyId, string baseUrl)
         {
             SqlConnection cn = Connect();
             DataSet ds = new DataSet();
@@ -240,7 +305,26 @@ namespace PartyService
                     }
                 }
 
-                return FirstTable(ds);
+                DataTable t = FirstTable(ds);
+
+                if (t == null) { return null; }
+
+                ContactResults cr = new ContactResults();
+
+                foreach (DataRow r in t.Rows)
+                {
+                    int contactId = Convert.ToInt32(r["id"]);
+                    string type = Convert.ToString(r["sub_type"]);
+                    string detail = Convert.ToString(r["detail"]);
+                    string link = string.Format("{0}contacts/{1}",
+                        baseUrl, contactId);
+
+                    cr.ContactList.Add
+                        (new ContactSummary(contactId, type, detail, link));
+                }
+
+                return cr;
+
             }
             finally
             {
@@ -436,7 +520,7 @@ namespace PartyService
             }
         }
 
-        public DataRow GetPartyContact(int partyId, int contactId)
+        public PartyContact GetPartyContact(int partyId, int contactId)
         {
             SqlConnection cn = Connect();
             DataSet ds = new DataSet();
@@ -454,7 +538,16 @@ namespace PartyService
                         da.Fill(ds);
                     }
                 }
-                return FirstRow(ds);
+                DataRow r = FirstRow(ds);
+
+                if (r == null) { return null; }
+
+                return new PartyContact(
+                   Convert.ToInt32(r["party_id"]),
+                   Convert.ToInt32(r["contact_id"]),
+                   Convert.ToDateTime(r["valid_from"]),
+                   Convert.ToDateTime(r["valid_until"]));
+
             }
             finally
             {
