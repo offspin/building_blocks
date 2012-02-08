@@ -297,6 +297,7 @@ begin
            a.town,
            a.county,
            a.post_code,
+           a.full_address,
            t.number as telephone_number,
            e.address as email_address
     from   dbo.contact as c
