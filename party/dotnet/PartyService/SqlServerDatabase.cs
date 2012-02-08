@@ -316,7 +316,7 @@ namespace PartyService
                     int contactId = Convert.ToInt32(r["id"]);
                     string type = Convert.ToString(r["sub_type"]);
                     string detail = Convert.ToString(r["detail"]);
-                    string link = string.Format("{0}contacts/{1}",
+                    string link = string.Format("{0}contact/{1}",
                         baseUrl, contactId);
 
                     cr.ContactList.Add

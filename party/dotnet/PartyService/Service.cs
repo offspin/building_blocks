@@ -555,7 +555,7 @@ namespace PartyService
 
         [WebGet(UriTemplate = "/party/{idStr}/contacts")]
         [OperationContract]
-        public ContactResults GetPartyContacts(string idStr)
+        public ContactResults GetContactsByParty(string idStr)
         {
             try
             {
