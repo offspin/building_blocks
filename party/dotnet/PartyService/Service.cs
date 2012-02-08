@@ -193,7 +193,9 @@ namespace PartyService
 
                 if (database.GetParty(id) == null)
                 {
-                    throw (new Exception(string.Format("Business {0} not found", id)));
+                    throw (new WebFaultException<Error>(
+                        new Error(string.Format("Business {0} not found", id)),
+                        HttpStatusCode.NotFound));
                 }
 
                 database.UpdateBusiness(id, business.Name, business.RegNumber);
@@ -327,7 +329,9 @@ namespace PartyService
 
                 if (database.GetContact(id) == null)
                 {
-                    throw (new Exception(string.Format("Address {0} not found", id)));
+                    throw (new WebFaultException<Error>(
+                        new Error(string.Format("Address {0} not found", id)),
+                        HttpStatusCode.NotFound));
                 }
 
                 database.UpdateAddress(id, address.Street, address.Town, address.County, address.PostCode);
@@ -372,7 +376,9 @@ namespace PartyService
 
                 if (database.GetContact(id) == null)
                 {
-                    throw (new Exception(string.Format("Email {0} not found", id)));
+                    throw (new WebFaultException<Error>(
+                        new Error(string.Format("Email {0} not found", id)),
+                        HttpStatusCode.NotFound));
                 }
 
                 database.UpdateEmail(id, email.SubType, email.Address);
@@ -417,7 +423,9 @@ namespace PartyService
 
                 if (database.GetContact(id) == null)
                 {
-                    throw (new Exception(string.Format("Telephone {0} not found", id)));
+                    throw (new WebFaultException<Error>(
+                        new Error(string.Format("Telephone {0} not found", id)),
+                        HttpStatusCode.NotFound));
                 }
 
                 database.UpdateTelephone(id, telephone.SubType, telephone.Number);
@@ -593,7 +601,7 @@ namespace PartyService
             }
             catch (Exception ex)
             {
-               throw MakeWebFaultException(ex);
+                throw MakeWebFaultException(ex);
             }
 
         }
@@ -636,11 +644,11 @@ namespace PartyService
             }
             catch (Exception ex)
             {
-                throw MakeWebFaultException( ex);
+                throw MakeWebFaultException(ex);
             }
         }
 
-   
+
         private WebFaultException<Error> MakeWebFaultException(Exception ex)
         {
             return (ex is WebFaultException<Error>) ?
