@@ -28,6 +28,7 @@ module Party
                 select p.id,
                        p.type,
                        b.name, 
+                       b.reg_number,
                        pr.first_name,
                        pr.last_name,
                        pr.date_of_birth
@@ -62,7 +63,7 @@ module Party
               union
               select b.party_id, 
                      'B' as type,
-                     b.name
+                     b.name || ' (' || b.reg_number || ')'
               from   business as b
               where  to_tsvector('english', b.name) @@ plainto_tsquery('english', $1)
               order by 2, 1 ;
@@ -118,7 +119,7 @@ module Party
 
         end
 
-        def create_business(name)
+        def create_business(name, reg_number)
 
             party_sql = <<-EOS
                 insert into party(type) values('B');
@@ -126,8 +127,8 @@ module Party
 
             business_sql = <<-EOS
                 insert into business
-                (party_id, name)
-                select lastval(), $1
+                (party_id, name, reg_number)
+                select lastval(), $1, $2
                    returning party_id;
             EOS
 
@@ -135,7 +136,7 @@ module Party
 
             @connection.transaction do
                 @connection.exec party_sql
-                res = @connection.exec(business_sql, [name])
+                res = @connection.exec(business_sql, [name, reg_number])
                 party_id = res.first['party_id'] if res.first
             end
             
@@ -143,15 +144,16 @@ module Party
 
         end
 
-        def update_business(party_id, name)
+        def update_business(party_id, name, reg_number)
 
             sql = <<-EOS
                 update business
-                set    name = $2
+                set    name = $2,
+                       reg_number = $3
                 where  party_id = $1;
             EOS
 
-            @connection.exec(sql, [party_id, name])
+            @connection.exec(sql, [party_id, name, reg_number])
 
         end
 
