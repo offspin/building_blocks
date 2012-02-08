@@ -55,7 +55,7 @@ create table dbo.person
     party_id integer not null,
     first_name varchar(30) not null,
     last_name varchar(30) not null,
-    date_of_birth date not null,
+    date_of_birth datetime not null,
     full_name 
       as first_name + ' ' + last_name,
     constraint pk_person primary key(party_id),
@@ -154,8 +154,8 @@ create table dbo.party_contact
 (
     party_id integer not null,
     contact_id integer not null,
-    valid_from date not null,
-    valid_until date not null default '3000-01-01',
+    valid_from datetime not null,
+    valid_until datetime not null default '3000-01-01',
     constraint pk_party_contact primary key(party_id, contact_id, valid_from),
     constraint ck_party_contact_valid_order
        check(valid_from <= valid_until),
@@ -183,7 +183,7 @@ create table dbo.system_config
 (
     name varchar(50) not null,
     int_value integer null,
-    timestamp_value timestamp null,
+    timestamp_value datetime null,
     string_value varchar(500) null,
     constraint pk_system_config primary key(name)
 )
