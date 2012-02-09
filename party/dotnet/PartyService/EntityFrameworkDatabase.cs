@@ -19,6 +19,10 @@ namespace PartyService
             EntityConnectionStringBuilder ecsb = new EntityConnectionStringBuilder();
             ecsb.Metadata = "res://*/Party.csdl|res://*/Party.ssdl|res://*/Party.msl";
             ecsb.Provider = "System.Data.SqlClient";
+            if (!connectionString.ToLower().Contains("multipleactiveresultsets=true"))
+            {
+                connectionString += ";multipleactiveresultsets=true;";
+            }
             ecsb.ProviderConnectionString = connectionString;
             this.connectionString = ecsb.ToString();
         }
@@ -168,12 +172,32 @@ namespace PartyService
             {
                 using (PartyEntities context = new PartyEntities(this.connectionString))
                 {
-
-                    Party party = GetParty(id);
-                    if (party != null)
+                    using (TransactionScope txnScope = new TransactionScope(TransactionScopeOption.Required))
                     {
-                        context.DeleteObject(party);
-                        context.SaveChanges();
+                        Party party =
+                            (from p in context.Parties
+                             where (p.Id == id)
+                             select p).First();
+
+                        if (party != null)
+                        {
+                            var partyContacts =
+                                from partyContact in context.PartyContacts
+                                where (partyContact.PartyId == id)
+                                select partyContact;
+
+                            foreach (PartyContact toRemove in partyContacts)
+                            {
+                                context.DeleteObject(toRemove);
+                                context.SaveChanges();
+                            }
+
+                            context.DeleteObject(party);
+                            
+                            context.SaveChanges();
+                            context.AcceptAllChanges();
+                            txnScope.Complete();
+                        }
                     }
                 }
             }
@@ -372,7 +396,11 @@ namespace PartyService
                 using (PartyEntities context = new PartyEntities(this.connectionString))
                 {
 
-                    Contact contact = GetContact(id);
+                    Contact contact =
+                        (from ct in context.Contacts
+                         where (ct.Id == id)
+                         select ct).First();
+
                     if (contact != null)
                     {
                         context.DeleteObject(contact);
@@ -460,7 +488,11 @@ namespace PartyService
                 using (PartyEntities context = new PartyEntities(this.connectionString))
                 {
 
-                    PartyContact partyContact = GetPartyContact(partyId, contactId);
+                    PartyContact partyContact =
+                       (from pc in context.PartyContacts
+                        where (pc.PartyId == partyId && pc.ContactId == contactId)
+                        select pc).First();
+
                     if (partyContact != null)
                     {
                         context.DeleteObject(partyContact);
@@ -556,7 +588,11 @@ namespace PartyService
                 using (PartyEntities context = new PartyEntities(this.connectionString))
                 {
 
-                    User user = GetUser(name);
+                    User user =
+                        (from u in context.Users
+                         where (u.Name == name)
+                         select u).First();
+
                     if (user != null)
                     {
                         context.DeleteObject(user);
