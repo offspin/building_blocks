@@ -27,8 +27,8 @@ namespace PartyService
         void CreatePartyContact(int partyId, int contactId, DateTime validFrom, DateTime validUntil);
         void UpdatePartyContact(int partyId, int contactId, DateTime validFrom, DateTime validUntil);
         void DeletePartyContact(int partyId, int contactId);
-        DataRow GetSystemConfig(string name);
-        DataRow GetUser(string name);
+        SystemConfig GetSystemConfig(string name);
+        User GetUser(string name);
         void CreateUser(string name, string fullName, string passwordHash);
         void UpdateUser(string name, string fullName, string passwordHash);
         void DeleteUser(string name);

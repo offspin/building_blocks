@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Xml.Serialization;
 using System.Runtime.Serialization;
 
@@ -27,14 +26,16 @@ namespace PartyService
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public DateTime DateOfBirth { get; set; }
+        public string FullName { get; set; }
 
         public Person() { }
-        public Person(int id, string firstName, string lastName, DateTime dateOfBirth)
+        public Person(int id, string firstName, string lastName, DateTime dateOfBirth, string fullName)
             : base(id, "P")
         {
             FirstName = firstName;
             LastName = lastName;
             DateOfBirth = dateOfBirth;
+            FullName = fullName;
         }
 
 
@@ -75,15 +76,17 @@ namespace PartyService
         public string Town { get; set; }
         public string County { get; set; }
         public string PostCode { get; set; }
+        public string FullAddress { get; set; }
 
         public Address() { }
-        public Address(int id, string street, string town, string county, string postCode)
+        public Address(int id, string street, string town, string county, string postCode, string fullAddress)
             : base(id, "A")
         {
             Street = street;
             Town = town;
-            if (county != String.Empty) { County = county; }
-            if (postCode != String.Empty) { PostCode = postCode; }
+            if (county != string.Empty) { County = county; }
+            if (postCode != string.Empty) { PostCode = postCode; }
+            if (FullAddress != string.Empty) { FullAddress = fullAddress; }
         }
     }
 
@@ -190,6 +193,40 @@ namespace PartyService
 
         [XmlElement("ContactSummary")]
         public List<ContactSummary> ContactList { get; set; }
+    }
+
+    public class User
+    {
+        public string Name { get; set; }
+        public string FullName { get; set; }
+        public string PasswordHash { get; set; }
+
+        public User() { }
+
+        public User(string name, string fullName, string passwordHash)
+        {
+            Name = name;
+            FullName = fullName;
+            PasswordHash = passwordHash;
+        }
+    }
+
+    public class SystemConfig
+    {
+        public string Name { get; set; }
+        public int? IntValue { get; set; }
+        public DateTime? TimestampValue { get; set; }
+        public string StringValue { get; set; }
+
+        public SystemConfig() { }
+
+        public SystemConfig(string name, int intValue, DateTime timestampValue, string stringValue)
+        {
+            Name = name;
+            IntValue = intValue;
+            TimestampValue = timestampValue;
+            StringValue = stringValue;
+        }
     }
 
     public class Acknowledgement

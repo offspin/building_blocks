@@ -1,12 +1,5 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="PartyServer.Properties" GeneratedClassName="Settings">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)">
   <Profiles />
-  <Settings>
-    <Setting Name="AuthDatabaseClass" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">PartyService.SqlServerDatabase</Value>
-    </Setting>
-    <Setting Name="AuthDatabaseConnectionString" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">Server=.;Database=party;Integrated Security=true;</Value>
-    </Setting>
-  </Settings>
+  <Settings />
 </SettingsFile>

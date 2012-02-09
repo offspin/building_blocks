@@ -22,23 +22,5 @@ namespace PartyServer.Properties {
                 return defaultInstance;
             }
         }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("PartyService.SqlServerDatabase")]
-        public string AuthDatabaseClass {
-            get {
-                return ((string)(this["AuthDatabaseClass"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Server=.;Database=party;Integrated Security=true;")]
-        public string AuthDatabaseConnectionString {
-            get {
-                return ((string)(this["AuthDatabaseConnectionString"]));
-            }
-        }
     }
 }

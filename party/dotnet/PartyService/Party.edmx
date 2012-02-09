@@ -1,0 +1,499 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="2.0" xmlns:edmx="http://schemas.microsoft.com/ado/2008/10/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+    <Schema Namespace="Party.Store" Alias="Self" Provider="System.Data.SqlClient" ProviderManifestToken="2008" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns="http://schemas.microsoft.com/ado/2009/02/edm/ssdl">
+        <EntityContainer Name="PartyStoreContainer">
+          <EntitySet Name="address" EntityType="Party.Store.address" store:Type="Tables" Schema="dbo" />
+          <EntitySet Name="business" EntityType="Party.Store.business" store:Type="Tables" Schema="dbo" />
+          <EntitySet Name="contact" EntityType="Party.Store.contact" store:Type="Tables" Schema="dbo" />
+          <EntitySet Name="email" EntityType="Party.Store.email" store:Type="Tables" Schema="dbo" />
+          <EntitySet Name="party" EntityType="Party.Store.party" store:Type="Tables" Schema="dbo" />
+          <EntitySet Name="party_contact" EntityType="Party.Store.party_contact" store:Type="Tables" Schema="dbo" />
+          <EntitySet Name="person" EntityType="Party.Store.person" store:Type="Tables" Schema="dbo" />
+          <EntitySet Name="system_config" EntityType="Party.Store.system_config" store:Type="Tables" Schema="dbo" />
+          <EntitySet Name="telephone" EntityType="Party.Store.telephone" store:Type="Tables" Schema="dbo" />
+          <EntitySet Name="user_of_system" EntityType="Party.Store.user_of_system" store:Type="Tables" Schema="dbo" />
+          <AssociationSet Name="fk_address_contact" Association="Party.Store.fk_address_contact">
+            <End Role="contact" EntitySet="contact" />
+            <End Role="address" EntitySet="address" />
+          </AssociationSet>
+          <AssociationSet Name="fk_business_party" Association="Party.Store.fk_business_party">
+            <End Role="party" EntitySet="party" />
+            <End Role="business" EntitySet="business" />
+          </AssociationSet>
+          <AssociationSet Name="fk_email_contact" Association="Party.Store.fk_email_contact">
+            <End Role="contact" EntitySet="contact" />
+            <End Role="email" EntitySet="email" />
+          </AssociationSet>
+          <AssociationSet Name="fk_party_contact_contact" Association="Party.Store.fk_party_contact_contact">
+            <End Role="contact" EntitySet="contact" />
+            <End Role="party_contact" EntitySet="party_contact" />
+          </AssociationSet>
+          <AssociationSet Name="fk_party_contact_party" Association="Party.Store.fk_party_contact_party">
+            <End Role="party" EntitySet="party" />
+            <End Role="party_contact" EntitySet="party_contact" />
+          </AssociationSet>
+          <AssociationSet Name="fk_person_party" Association="Party.Store.fk_person_party">
+            <End Role="party" EntitySet="party" />
+            <End Role="person" EntitySet="person" />
+          </AssociationSet>
+          <AssociationSet Name="fk_telephone_contact" Association="Party.Store.fk_telephone_contact">
+            <End Role="contact" EntitySet="contact" />
+            <End Role="telephone" EntitySet="telephone" />
+          </AssociationSet>
+        </EntityContainer>
+        <EntityType Name="address">
+          <Key>
+            <PropertyRef Name="contact_id" />
+          </Key>
+          <Property Name="contact_id" Type="int" Nullable="false" />
+          <Property Name="street" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="town" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="county" Type="varchar" MaxLength="30" />
+          <Property Name="post_code" Type="varchar" MaxLength="20" />
+          <Property Name="full_address" Type="varchar" MaxLength="153" StoreGeneratedPattern="Computed" />
+        </EntityType>
+        <EntityType Name="business">
+          <Key>
+            <PropertyRef Name="party_id" />
+          </Key>
+          <Property Name="party_id" Type="int" Nullable="false" />
+          <Property Name="name" Type="varchar" Nullable="false" MaxLength="60" />
+          <Property Name="reg_number" Type="varchar" Nullable="false" MaxLength="30" />
+        </EntityType>
+        <EntityType Name="contact">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="type" Type="char" Nullable="false" MaxLength="1" />
+        </EntityType>
+        <EntityType Name="email">
+          <Key>
+            <PropertyRef Name="contact_id" />
+          </Key>
+          <Property Name="contact_id" Type="int" Nullable="false" />
+          <Property Name="address" Type="varchar" Nullable="false" MaxLength="100" />
+          <Property Name="type" Type="char" Nullable="false" MaxLength="1" />
+        </EntityType>
+        <EntityType Name="party">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="type" Type="char" Nullable="false" MaxLength="1" />
+        </EntityType>
+        <EntityType Name="party_contact">
+          <Key>
+            <PropertyRef Name="party_id" />
+            <PropertyRef Name="contact_id" />
+            <PropertyRef Name="valid_from" />
+          </Key>
+          <Property Name="party_id" Type="int" Nullable="false" />
+          <Property Name="contact_id" Type="int" Nullable="false" />
+          <Property Name="valid_from" Type="datetime" Nullable="false" />
+          <Property Name="valid_until" Type="datetime" Nullable="false" />
+        </EntityType>
+        <EntityType Name="person">
+          <Key>
+            <PropertyRef Name="party_id" />
+          </Key>
+          <Property Name="party_id" Type="int" Nullable="false" />
+          <Property Name="first_name" Type="varchar" Nullable="false" MaxLength="30" />
+          <Property Name="last_name" Type="varchar" Nullable="false" MaxLength="30" />
+          <Property Name="date_of_birth" Type="datetime" Nullable="false" />
+          <Property Name="full_name" Type="varchar" Nullable="false" MaxLength="61" StoreGeneratedPattern="Computed" />
+        </EntityType>
+        <EntityType Name="system_config">
+          <Key>
+            <PropertyRef Name="name" />
+          </Key>
+          <Property Name="name" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="int_value" Type="int" />
+          <Property Name="timestamp_value" Type="datetime" StoreGeneratedPattern="Computed" />
+          <Property Name="string_value" Type="varchar" MaxLength="500" />
+        </EntityType>
+        <EntityType Name="telephone">
+          <Key>
+            <PropertyRef Name="contact_id" />
+          </Key>
+          <Property Name="contact_id" Type="int" Nullable="false" />
+          <Property Name="number" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="type" Type="char" Nullable="false" MaxLength="1" />
+        </EntityType>
+        <EntityType Name="user_of_system">
+          <Key>
+            <PropertyRef Name="name" />
+          </Key>
+          <Property Name="name" Type="varchar" Nullable="false" MaxLength="20" />
+          <Property Name="full_name" Type="varchar" Nullable="false" MaxLength="50" />
+          <Property Name="password_hash" Type="varchar" Nullable="false" MaxLength="500" />
+        </EntityType>
+        <Association Name="fk_address_contact">
+          <End Role="contact" Type="Party.Store.contact" Multiplicity="1" />
+          <End Role="address" Type="Party.Store.address" Multiplicity="0..1" />
+          <ReferentialConstraint>
+            <Principal Role="contact">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="address">
+              <PropertyRef Name="contact_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="fk_business_party">
+          <End Role="party" Type="Party.Store.party" Multiplicity="1" />
+          <End Role="business" Type="Party.Store.business" Multiplicity="0..1" />
+          <ReferentialConstraint>
+            <Principal Role="party">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="business">
+              <PropertyRef Name="party_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="fk_email_contact">
+          <End Role="contact" Type="Party.Store.contact" Multiplicity="1" />
+          <End Role="email" Type="Party.Store.email" Multiplicity="0..1" />
+          <ReferentialConstraint>
+            <Principal Role="contact">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="email">
+              <PropertyRef Name="contact_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="fk_party_contact_contact">
+          <End Role="contact" Type="Party.Store.contact" Multiplicity="1" />
+          <End Role="party_contact" Type="Party.Store.party_contact" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="contact">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="party_contact">
+              <PropertyRef Name="contact_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="fk_party_contact_party">
+          <End Role="party" Type="Party.Store.party" Multiplicity="1" />
+          <End Role="party_contact" Type="Party.Store.party_contact" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="party">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="party_contact">
+              <PropertyRef Name="party_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="fk_person_party">
+          <End Role="party" Type="Party.Store.party" Multiplicity="1" />
+          <End Role="person" Type="Party.Store.person" Multiplicity="0..1" />
+          <ReferentialConstraint>
+            <Principal Role="party">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="person">
+              <PropertyRef Name="party_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="fk_telephone_contact">
+          <End Role="contact" Type="Party.Store.contact" Multiplicity="1" />
+          <End Role="telephone" Type="Party.Store.telephone" Multiplicity="0..1" />
+          <ReferentialConstraint>
+            <Principal Role="contact">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="telephone">
+              <PropertyRef Name="contact_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+      </Schema></edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema xmlns="http://schemas.microsoft.com/ado/2008/09/edm" xmlns:cg="http://schemas.microsoft.com/ado/2006/04/codegeneration" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" Namespace="PartyService" Alias="Self" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation">
+        <EntityContainer Name="PartyContainer" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="Parties" EntityType="PartyService.Party" />
+          <EntitySet Name="SystemConfigs" EntityType="PartyService.SystemConfig" />
+          <EntitySet Name="Users" EntityType="PartyService.User" />
+          <EntitySet Name="Contacts1" EntityType="PartyService.Contact" />
+          <EntitySet Name="PartyContacts" EntityType="PartyService.PartyContact" />
+          <AssociationSet Name="fk_party_contact_contact" Association="PartyService.fk_party_contact_contact">
+            <End Role="Contact" EntitySet="Contacts1" />
+            <End Role="party_contact" EntitySet="PartyContacts" />
+          </AssociationSet>
+          <AssociationSet Name="fk_party_contact_party" Association="PartyService.fk_party_contact_party">
+            <End Role="Party" EntitySet="Parties" />
+            <End Role="party_contact" EntitySet="PartyContacts" />
+          </AssociationSet>
+        </EntityContainer>
+        <EntityType Name="Party">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="Type" Nullable="false" MaxLength="1" />
+        </EntityType>
+        <EntityType Name="Person" BaseType="PartyService.Party">
+          <Property Type="String" Name="FirstName" Nullable="false" MaxLength="30" />
+          <Property Type="String" Name="LastName" Nullable="false" MaxLength="30" />
+          <Property Type="DateTime" Name="DateOfBirth" Nullable="false" />
+          <Property Type="String" Name="FullName" Nullable="false" annotation:StoreGeneratedPattern="Computed" />
+        </EntityType>
+        <EntityType Name="Business" BaseType="PartyService.Party" >
+          <Property Type="String" Name="Name" Nullable="false" MaxLength="60" />
+          <Property Type="String" Name="RegNumber" Nullable="false" MaxLength="30" />
+        </EntityType>
+        <EntityType Name="SystemConfig">
+          <Key>
+            <PropertyRef Name="Name" />
+          </Key>
+          <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="Int32" Name="IntValue" Nullable="true" />
+          <Property Type="DateTime" Name="TimestampValue" annotation:StoreGeneratedPattern="Computed" Nullable="true" />
+          <Property Type="String" Name="StringValue" MaxLength="500" FixedLength="false" Unicode="false" Nullable="true" />
+        </EntityType>
+        <EntityType Name="User">
+          <Key>
+            <PropertyRef Name="Name" />
+          </Key>
+          <Property Type="String" Name="Name" Nullable="false" MaxLength="20" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="FullName" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="PasswordHash" Nullable="false" MaxLength="500" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <EntityType Name="Address" BaseType="PartyService.Contact">
+          <Property Type="String" Name="Street" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="Town" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="County" MaxLength="30" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="PostCode" MaxLength="20" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="FullAddress" MaxLength="153" FixedLength="false" Unicode="false" annotation:StoreGeneratedPattern="Computed" />
+        </EntityType>
+        <EntityType Name="Contact">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="Type" Nullable="false" MaxLength="1" FixedLength="true" Unicode="false" />
+        </EntityType>
+        <EntityType Name="Email" BaseType="PartyService.Contact">
+          <Property Type="String" Name="Address" Nullable="false" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="SubType" Nullable="false" MaxLength="1" FixedLength="true" Unicode="false" />
+        </EntityType>
+        <EntityType Name="Telephone" BaseType="PartyService.Contact">
+          <Property Type="String" Name="Number" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="SubType" Nullable="false" MaxLength="1" FixedLength="true" Unicode="false" />
+        </EntityType>
+        <EntityType Name="PartyContact">
+          <Key>
+            <PropertyRef Name="PartyId" />
+            <PropertyRef Name="ContactId" />
+            <PropertyRef Name="ValidFrom" />
+          </Key>
+          <Property Type="Int32" Name="PartyId" Nullable="false" />
+          <Property Type="Int32" Name="ContactId" Nullable="false" />
+          <Property Type="DateTime" Name="ValidFrom" Nullable="false" />
+          <Property Type="DateTime" Name="ValidUntil" Nullable="false" />
+        </EntityType>
+        <Association Name="fk_party_contact_contact">
+          <End Type="PartyService.Contact" Role="Contact" Multiplicity="1" />
+          <End Type="PartyService.PartyContact" Role="party_contact" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Contact">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="party_contact">
+              <PropertyRef Name="ContactId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="fk_party_contact_party">
+          <End Type="PartyService.Party" Role="Party" Multiplicity="1" />
+          <End Type="PartyService.PartyContact" Role="party_contact" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Party">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="party_contact">
+              <PropertyRef Name="PartyId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping xmlns="http://schemas.microsoft.com/ado/2008/09/mapping/cs" Space="C-S">
+        <Alias Key="Model" Value="Party" />
+        <Alias Key="Target" Value="Party.Store" />
+        <EntityContainerMapping CdmEntityContainer="PartyContainer" StorageEntityContainer="PartyStoreContainer">
+          <EntitySetMapping Name="Parties">
+            <EntityTypeMapping TypeName="IsTypeOf(PartyService.Party)">
+              <MappingFragment StoreEntitySet="party" >
+                <ScalarProperty Name="Type" ColumnName="type" />
+                <ScalarProperty Name="Id" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+            <EntityTypeMapping TypeName="IsTypeOf(PartyService.Person)">
+              <MappingFragment StoreEntitySet="person" >
+                <ScalarProperty Name="FullName" ColumnName="full_name" />
+                <ScalarProperty Name="DateOfBirth" ColumnName="date_of_birth" />
+                <ScalarProperty Name="LastName" ColumnName="last_name" />
+                <ScalarProperty Name="FirstName" ColumnName="first_name" />
+                <ScalarProperty Name="Id" ColumnName="party_id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+            <EntityTypeMapping TypeName="IsTypeOf(PartyService.Business)">
+              <MappingFragment StoreEntitySet="business" >
+              <ScalarProperty Name="RegNumber" ColumnName="reg_number" />
+                <ScalarProperty Name="Name" ColumnName="name" />
+                <ScalarProperty Name="Id" ColumnName="party_id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="SystemConfigs">
+            <EntityTypeMapping TypeName="PartyService.SystemConfig">
+              <MappingFragment StoreEntitySet="system_config">
+                <ScalarProperty Name="StringValue" ColumnName="string_value" />
+                <ScalarProperty Name="TimestampValue" ColumnName="timestamp_value" />
+                <ScalarProperty Name="IntValue" ColumnName="int_value" />
+                <ScalarProperty Name="Name" ColumnName="name" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Users">
+            <EntityTypeMapping TypeName="PartyService.User">
+              <MappingFragment StoreEntitySet="user_of_system">
+                <ScalarProperty Name="PasswordHash" ColumnName="password_hash" />
+                <ScalarProperty Name="FullName" ColumnName="full_name" />
+                <ScalarProperty Name="Name" ColumnName="name" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Contacts1">
+            <EntityTypeMapping TypeName="IsTypeOf(PartyService.Contact)">
+              <MappingFragment StoreEntitySet="contact">
+                <ScalarProperty Name="Id" ColumnName="id" />
+                <ScalarProperty Name="Type" ColumnName="type" />
+              </MappingFragment>
+            </EntityTypeMapping>
+            <EntityTypeMapping TypeName="IsTypeOf(PartyService.Address)">
+              <MappingFragment StoreEntitySet="address">
+                <ScalarProperty Name="Id" ColumnName="contact_id" />
+                <ScalarProperty Name="Street" ColumnName="street" />
+                <ScalarProperty Name="Town" ColumnName="town" />
+                <ScalarProperty Name="County" ColumnName="county" />
+                <ScalarProperty Name="PostCode" ColumnName="post_code" />
+                <ScalarProperty Name="FullAddress" ColumnName="full_address" />
+              </MappingFragment>
+            </EntityTypeMapping>
+            <EntityTypeMapping TypeName="IsTypeOf(PartyService.Email)">
+              <MappingFragment StoreEntitySet="email">
+                <ScalarProperty Name="Id" ColumnName="contact_id" />
+                <ScalarProperty Name="Address" ColumnName="address" />
+                <ScalarProperty Name="SubType" ColumnName="type" />
+              </MappingFragment>
+            </EntityTypeMapping>
+            <EntityTypeMapping TypeName="IsTypeOf(PartyService.Telephone)">
+              <MappingFragment StoreEntitySet="telephone">
+                <ScalarProperty Name="Id" ColumnName="contact_id" />
+                <ScalarProperty Name="Number" ColumnName="number" />
+                <ScalarProperty Name="SubType" ColumnName="type" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="PartyContacts">
+            <EntityTypeMapping TypeName="PartyService.PartyContact">
+              <MappingFragment StoreEntitySet="party_contact">
+                <ScalarProperty Name="ValidUntil" ColumnName="valid_until" />
+                <ScalarProperty Name="ValidFrom" ColumnName="valid_from" />
+                <ScalarProperty Name="ContactId" ColumnName="contact_id" />
+                <ScalarProperty Name="PartyId" ColumnName="party_id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2008/10/edmx">
+    <edmx:Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </edmx:Connection>
+    <edmx:Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="True" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="True" />
+      </DesignerInfoPropertySet>
+    </edmx:Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram Name="Party" ZoomLevel="95" >
+        <EntityTypeShape EntityType="PartyService.Party" Width="1.5" PointX="2.375" PointY="0.75" Height="1.4033821614583331" />
+        <EntityTypeShape EntityType="PartyService.Person" Width="1.5" PointX="4.875" PointY="3.125" Height="1.7879850260416665" IsExpanded="true" />
+        <InheritanceConnector EntityType="PartyService.Person" ManuallyRouted="false">
+          <ConnectorPoint PointX="3.125" PointY="2.1533821614583331" />
+          <ConnectorPoint PointX="3.125" PointY="2.7500000000000004" />
+          <ConnectorPoint PointX="5.625" PointY="2.7500000000000004" />
+          <ConnectorPoint PointX="5.625" PointY="3.125" />
+        </InheritanceConnector>
+        <EntityTypeShape EntityType="PartyService.Business" Width="1.5" PointX="0.875" PointY="3.125" Height="1.4033821614583326" />
+        <InheritanceConnector EntityType="PartyService.Business" ManuallyRouted="false" >
+          <ConnectorPoint PointX="3.125" PointY="2.1533821614583331" />
+          <ConnectorPoint PointX="3.125" PointY="2.75" />
+          <ConnectorPoint PointX="2.7708333333333335" PointY="2.7499999999999996" />
+          <ConnectorPoint PointX="2.6041666666666665" PointY="2.75" />
+          <ConnectorPoint PointX="1.625" PointY="2.75" />
+          <ConnectorPoint PointX="1.625" PointY="3.125" />
+        </InheritanceConnector>
+        <EntityTypeShape EntityType="PartyService.SystemConfig" Width="1.5" PointX="9.5" PointY="2.375" Height="1.7879850260416674" />
+        <EntityTypeShape EntityType="PartyService.User" Width="1.5" PointX="9.5" PointY="0.5" Height="1.5956835937499996" />
+        <EntityTypeShape EntityType="PartyService.Address" Width="1.5" PointX="3" PointY="6.25" Height="1.9802864583333335" />
+        <EntityTypeShape EntityType="PartyService.Contact" Width="1.5" PointX="0.75" PointY="8.875" Height="1.4033821614583335" />
+        <EntityTypeShape EntityType="PartyService.Email" Width="1.5" PointX="3" PointY="9.25" Height="1.4033821614583335" />
+        <EntityTypeShape EntityType="PartyService.Telephone" Width="1.5" PointX="3" PointY="11.875" Height="1.4033821614583335" />
+        <InheritanceConnector EntityType="PartyService.Address" ManuallyRouted="false">
+          <ConnectorPoint PointX="1.5" PointY="8.875" />
+          <ConnectorPoint PointX="1.5" PointY="8.6052864583333335" />
+          <ConnectorPoint PointX="1.8229191666666667" PointY="8.6052864583333335" />
+          <ConnectorPoint PointX="1.9895858333333332" PointY="8.6052864583333335" />
+          <ConnectorPoint PointX="3.75" PointY="8.6052864583333335" />
+          <ConnectorPoint PointX="3.75" PointY="8.2302864583333335" />
+        </InheritanceConnector>
+        <InheritanceConnector EntityType="PartyService.Email" ManuallyRouted="false">
+          <ConnectorPoint PointX="2.25" PointY="9.7641910807291659" />
+          <ConnectorPoint PointX="3" PointY="9.7641910807291659" />
+        </InheritanceConnector>
+        <InheritanceConnector EntityType="PartyService.Telephone" ManuallyRouted="false">
+          <ConnectorPoint PointX="1.5" PointY="10.278382161458334" />
+          <ConnectorPoint PointX="1.5" PointY="11.5" />
+          <ConnectorPoint PointX="3.75" PointY="11.5" />
+          <ConnectorPoint PointX="3.75" PointY="11.875" />
+        </InheritanceConnector>
+        <EntityTypeShape EntityType="PartyService.PartyContact" Width="1.5" PointX="7.625" PointY="5.5" Height="1.7879850260416665" />
+        <AssociationConnector Association="PartyService.fk_party_contact_contact" >
+          <ConnectorPoint PointX="1.9062525" PointY="8.875" />
+          <ConnectorPoint PointX="1.9062525" PointY="6.0241575770701221" />
+          <ConnectorPoint PointX="7.625" PointY="6.0241575770701221" />
+        </AssociationConnector>
+        <AssociationConnector Association="PartyService.fk_party_contact_party" ManuallyRouted="false" >
+          <ConnectorPoint PointX="2.6875" PointY="2.1533821614583331" />
+          <ConnectorPoint PointX="2.6875" PointY="5.73082628853506" />
+          <ConnectorPoint PointX="7.625" PointY="5.73082628853506" />
+        </AssociationConnector>
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

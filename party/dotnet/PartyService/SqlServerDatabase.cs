@@ -55,7 +55,8 @@ namespace PartyService
                         string firstName = Convert.ToString(r["first_name"]);
                         string lastName = Convert.ToString(r["last_name"]);
                         DateTime dateOfBirth = Convert.ToDateTime(r["date_of_birth"]);
-                        return new Person(id, firstName, lastName, dateOfBirth);
+                        string fullName = Convert.ToString(r["full_name"]);
+                        return new Person(id, firstName, lastName, dateOfBirth, fullName);
                     case "B":
                         string name = Convert.ToString(r["name"]);
                         string regNumber = Convert.ToString(r["reg_number"]);
@@ -265,13 +266,14 @@ namespace PartyService
                 string town = Convert.ToString(r["town"]);
                 string county = Convert.ToString(r["county"]);
                 string postCode = Convert.ToString(r["post_code"]);
+                string fullAddress = Convert.ToString(r["full_address"]); 
                 string emailAddress = Convert.ToString(r["email_address"]);
                 string telephoneNumber = Convert.ToString(r["telephone_number"]);
 
                 switch (type)
                 {
                     case "A":
-                        return new Address(id, street, town, county, postCode);
+                        return new Address(id, street, town, county, postCode, fullAddress);
                     case "E":
                         return new Email(id, subType, emailAddress);
                     case "T":
@@ -627,7 +629,7 @@ namespace PartyService
             }
         }
 
-        public DataRow GetSystemConfig(string name)
+        public SystemConfig GetSystemConfig(string name)
         {
             SqlConnection cn = Connect();
             DataSet ds = new DataSet();
@@ -644,7 +646,18 @@ namespace PartyService
                         da.Fill(ds);
                     }
                 }
-                return FirstRow(ds);
+                
+                DataRow r = FirstRow(ds);
+
+                if (r == null) { return null; }
+
+                string configName = Convert.ToString(r["name"]);
+                int intValue = r["int_value"] == DBNull.Value ? 0 : Convert.ToInt32(r["int_value"]);
+                DateTime timestampValue = Convert.ToDateTime(r["timestamp_value"]);
+                string stringValue = Convert.ToString(r["string_value"]);
+
+                return new SystemConfig(configName, intValue, timestampValue, stringValue);
+
             }
             finally
             {
@@ -653,7 +666,7 @@ namespace PartyService
 
         }
 
-        public DataRow GetUser(string name)
+        public User GetUser(string name)
         {
             SqlConnection cn = Connect();
             DataSet ds = new DataSet();
@@ -669,7 +682,14 @@ namespace PartyService
                         da.Fill(ds);
                     }
                 }
-                return FirstRow(ds);
+                DataRow r =  FirstRow(ds);
+                if (r == null) { return null; }
+
+                string userName = Convert.ToString(r["name"]);
+                string fullName = Convert.ToString(r["full_name"]);
+                string passwordHash = Convert.ToString(r["password_hash"]);
+
+                return new User(userName, fullName, passwordHash);
             }
             finally
             {

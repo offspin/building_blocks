@@ -422,7 +422,7 @@ namespace PartyService
 
         }
 
-        [WebGet(UriTemplate = "/party/{partyIdStr}/contact/{contactIdStr}")]
+        [WebGet(UriTemplate = "party/{partyIdStr}/contact/{contactIdStr}")]
         [OperationContract]
         PartyContact GetPartyContact(string partyIdStr, string contactIdStr)
         {
@@ -465,7 +465,7 @@ namespace PartyService
 
         }
 
-        [WebInvoke(UriTemplate = "/party/{partyIdStr}/contact/{contactIdStr}")]
+        [WebInvoke(UriTemplate = "party/{partyIdStr}/contact/{contactIdStr}")]
         [OperationContract]
         PartyContact UpdatePartyContact(string partyIdStr, string contactIdStr, PartyContact partyContact)
         {
@@ -508,7 +508,7 @@ namespace PartyService
 
         }
 
-        [WebInvoke(UriTemplate = "/party/{partyIdStr}/contact/{contactIdStr}/delete")]
+        [WebInvoke(UriTemplate = "party/{partyIdStr}/contact/{contactIdStr}/delete")]
         [OperationContract]
         Acknowledgement DeletePartyContact(string partyIdStr, string contactIdStr)
         {
@@ -553,7 +553,7 @@ namespace PartyService
 
         }
 
-        [WebGet(UriTemplate = "/party/{idStr}/contacts")]
+        [WebGet(UriTemplate = "party/{idStr}/contacts")]
         [OperationContract]
         public ContactResults GetContactsByParty(string idStr)
         {

@@ -6,7 +6,6 @@ using System.ServiceModel;
 using System.IdentityModel;
 using System.IdentityModel.Selectors;
 using System.Security.Cryptography;
-using System.Data;
 
 namespace PartyService
 {
@@ -28,14 +27,14 @@ namespace PartyService
             database = (IDatabase)Activator.CreateInstance(Type.GetType(dbClassName));
             database.setConnectionString(dbConnStr);
 
-            DataRow r = database.GetSystemConfig("REALM");
+            SystemConfig realmConfig =  database.GetSystemConfig("REALM");
 
-            if (r == null)
+            if (realmConfig == null)
             {
                 throw (new Exception("Security Configuration Error"));
             }
 
-            realm = Convert.ToString(r["string_value"]);
+            realm = realmConfig.StringValue;
 
             if (realm == String.Empty)
             {
@@ -57,9 +56,9 @@ namespace PartyService
 
             string passwordHash = BitConverter.ToString(hashBytes).ToLower().Replace("-", "");
 
-            DataRow r = database.GetUser(userName);
+            User user = database.GetUser(userName);
 
-            if (r == null || Convert.ToString(r["password_hash"]) != passwordHash)
+            if (user == null || user.PasswordHash != passwordHash)
             {
                 throw (new Exception("Authorisation Failed"));
             }

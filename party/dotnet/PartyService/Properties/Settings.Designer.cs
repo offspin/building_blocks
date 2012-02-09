@@ -25,7 +25,7 @@ namespace PartyService.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("PartyService.SqlServerDatabase")]
+        [global::System.Configuration.DefaultSettingValueAttribute("PartyService.EntityFrameworkDatabase")]
         public string DatabaseClass {
             get {
                 return ((string)(this["DatabaseClass"]));
@@ -34,7 +34,7 @@ namespace PartyService.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Server=.;Database=Party;Integrated Security=true;")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Server=.;Database=party;Integrated Security=true;")]
         public string DatabaseConnectionString {
             get {
                 return ((string)(this["DatabaseConnectionString"]));
