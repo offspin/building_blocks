@@ -11,24 +11,29 @@ namespace PartyServer
         static void Main(string[] args)
         {
 
-            WebServiceHost wsh = new WebServiceHost(typeof(PartyService.Service), new Uri("http://localhost:8000"));
-            
-            
-            WebHttpBinding whb = new WebHttpBinding(WebHttpSecurityMode.TransportCredentialOnly);
-            whb.Security.Transport.ClientCredentialType = HttpClientCredentialType.Basic;
+            WebServiceHost webServiceHost = new WebServiceHost(typeof(PartyService.Service));
 
-            wsh.Credentials.UserNameAuthentication.UserNamePasswordValidationMode = UserNamePasswordValidationMode.Custom;
-            wsh.Credentials.UserNameAuthentication.CustomUserNamePasswordValidator = new PartyService.Validator();
-            wsh.Description.Behaviors.Find<ServiceDebugBehavior>().IncludeExceptionDetailInFaults = true;
-   
-            ServiceEndpoint ep = wsh.AddServiceEndpoint(typeof(PartyService.Service), whb, "");
-         
-            
+            WebHttpBinding serviceBinding = new WebHttpBinding(WebHttpSecurityMode.TransportCredentialOnly);
+            serviceBinding.Security.Transport.ClientCredentialType = HttpClientCredentialType.Basic;
+            ServiceEndpoint ep = webServiceHost.AddServiceEndpoint(
+                typeof(PartyService.IService), 
+                serviceBinding, 
+                "http://localhost:8000/service");
+  
+            WebHttpBinding staticBinding = new WebHttpBinding(WebHttpSecurityMode.None);
+            ServiceEndpoint sep = webServiceHost.AddServiceEndpoint(
+                typeof(PartyService.IStaticItemService), 
+                new WebHttpBinding(), 
+                "http://localhost:8000");
 
-            wsh.Open();
+            webServiceHost.Credentials.UserNameAuthentication.UserNamePasswordValidationMode = UserNamePasswordValidationMode.Custom;
+            webServiceHost.Credentials.UserNameAuthentication.CustomUserNamePasswordValidator = new PartyService.Validator();
+            webServiceHost.Description.Behaviors.Find<ServiceDebugBehavior>().IncludeExceptionDetailInFaults = true;
+
+            webServiceHost.Open();
             Console.WriteLine("Service is running - press enter to quit");
             Console.ReadLine();
-            wsh.Close();
+            webServiceHost.Close();
             Console.WriteLine("Service stopped");
 
         }

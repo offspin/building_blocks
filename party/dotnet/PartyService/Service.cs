@@ -4,12 +4,13 @@ using System.Data;
 using System.Net;
 using System.ServiceModel;
 using System.ServiceModel.Web;
+using System.IO;
+
 
 namespace PartyService
 {
-    [ServiceContract]
-    [XmlSerializerFormat]
-    public class Service
+
+    public class Service : IService, IStaticItemService
     {
         private IDatabase database;
 
@@ -27,10 +28,6 @@ namespace PartyService
 
         }
 
-        [WebGet(UriTemplate = "party/{idStr}")]
-        [OperationContract]
-        [ServiceKnownType(typeof(Person))]
-        [ServiceKnownType(typeof(Business))]
         public Party GetParty(string idStr)
         {
 
@@ -63,8 +60,6 @@ namespace PartyService
 
         }
 
-        [WebGet(UriTemplate = "party/byname/{name}")]
-        [OperationContract]
         public PartyResults GetPartiesByName(string name)
         {
             try
@@ -82,8 +77,6 @@ namespace PartyService
             }
         }
 
-        [OperationContract]
-        [WebInvoke(UriTemplate = "person")]
         public Person CreatePerson(Person person)
         {
             try
@@ -97,8 +90,6 @@ namespace PartyService
             }
         }
 
-        [OperationContract]
-        [WebInvoke(UriTemplate = "person/{idStr}")]
         public Person UpdatePerson(string idStr, Person person)
         {
             try
@@ -130,8 +121,6 @@ namespace PartyService
             }
         }
 
-        [OperationContract]
-        [WebInvoke(UriTemplate = "business")]
         public Business CreateBusiness(Business business)
         {
             try
@@ -145,8 +134,6 @@ namespace PartyService
             }
         }
 
-        [OperationContract]
-        [WebInvoke(UriTemplate = "business/{idStr}")]
         public Business UpdateBusiness(string idStr, Business business)
         {
             try
@@ -178,8 +165,6 @@ namespace PartyService
 
         }
 
-        [OperationContract]
-        [WebInvoke(UriTemplate = "party/{idStr}/delete")]
         public Acknowledgement DeleteParty(string idStr)
         {
 
@@ -211,11 +196,6 @@ namespace PartyService
 
         }
 
-        [WebGet(UriTemplate = "contact/{idStr}")]
-        [OperationContract]
-        [ServiceKnownType(typeof(Address))]
-        [ServiceKnownType(typeof(Email))]
-        [ServiceKnownType(typeof(Telephone))]
         public Contact GetContact(string idStr)
         {
             try
@@ -239,7 +219,7 @@ namespace PartyService
                 }
 
                 return c;
-                
+
             }
             catch (Exception ex)
             {
@@ -247,8 +227,6 @@ namespace PartyService
             }
         }
 
-        [WebInvoke(UriTemplate = "address")]
-        [OperationContract]
         public Address CreateAddress(Address address)
         {
             try
@@ -262,8 +240,6 @@ namespace PartyService
             }
         }
 
-        [WebInvoke(UriTemplate = "address/{idStr}")]
-        [OperationContract]
         public Address UpdateAddress(string idStr, Address address)
         {
             try
@@ -294,8 +270,6 @@ namespace PartyService
             }
         }
 
-        [WebInvoke(UriTemplate = "email")]
-        [OperationContract]
         public Email CreateEmail(Email email)
         {
             try
@@ -309,8 +283,6 @@ namespace PartyService
             }
         }
 
-        [WebInvoke(UriTemplate = "email/{idStr}")]
-        [OperationContract]
         public Email UpdateEmail(string idStr, Email email)
         {
             try
@@ -341,8 +313,6 @@ namespace PartyService
             }
         }
 
-        [WebInvoke(UriTemplate = "telephone")]
-        [OperationContract]
         public Telephone CreateTelephone(Telephone telephone)
         {
             try
@@ -356,8 +326,6 @@ namespace PartyService
             }
         }
 
-        [WebInvoke(UriTemplate = "telephone/{idStr}")]
-        [OperationContract]
         public Telephone UpdateTelephone(string idStr, Telephone telephone)
         {
             try
@@ -388,9 +356,6 @@ namespace PartyService
             }
         }
 
-
-        [OperationContract]
-        [WebInvoke(UriTemplate = "contact/{idStr}/delete")]
         public Acknowledgement DeleteContact(string idStr)
         {
 
@@ -422,9 +387,7 @@ namespace PartyService
 
         }
 
-        [WebGet(UriTemplate = "party/{partyIdStr}/contact/{contactIdStr}")]
-        [OperationContract]
-        PartyContact GetPartyContact(string partyIdStr, string contactIdStr)
+        public PartyContact GetPartyContact(string partyIdStr, string contactIdStr)
         {
 
             try
@@ -465,9 +428,7 @@ namespace PartyService
 
         }
 
-        [WebInvoke(UriTemplate = "party/{partyIdStr}/contact/{contactIdStr}")]
-        [OperationContract]
-        PartyContact UpdatePartyContact(string partyIdStr, string contactIdStr, PartyContact partyContact)
+        public PartyContact UpdatePartyContact(string partyIdStr, string contactIdStr, PartyContact partyContact)
         {
 
             try
@@ -508,9 +469,7 @@ namespace PartyService
 
         }
 
-        [WebInvoke(UriTemplate = "party/{partyIdStr}/contact/{contactIdStr}/delete")]
-        [OperationContract]
-        Acknowledgement DeletePartyContact(string partyIdStr, string contactIdStr)
+        public Acknowledgement DeletePartyContact(string partyIdStr, string contactIdStr)
         {
 
             try
@@ -553,8 +512,6 @@ namespace PartyService
 
         }
 
-        [WebGet(UriTemplate = "party/{idStr}/contacts")]
-        [OperationContract]
         public ContactResults GetContactsByParty(string idStr)
         {
             try
@@ -571,7 +528,7 @@ namespace PartyService
                 }
 
                 ContactResults contactResults = database.GetContactByPartyId(id, baseUrl);
-              
+
                 return contactResults;
 
             }
@@ -581,8 +538,51 @@ namespace PartyService
             }
         }
 
+        public Stream GetStaticFile(string fileName, string extension)
+        {
 
-        private WebFaultException<Error> MakeWebFaultException(Exception ex)
+            fileName.Trim(); extension.Trim();
+            fileName.Replace("..", ""); extension.Replace("..", "");
+
+            string contentType = "application/octet-stream";
+
+            switch (extension.ToLower())
+            {
+                case "xml":
+                    contentType = "application/xml";
+                    break;
+                case "html":
+                    contentType = "text/html";
+                    break;
+                case "txt":
+                    contentType = "text/plain";
+                    break;
+                case "gif":
+                    contentType = "image/gif";
+                    break;
+                case "jpg":
+                    contentType = "image/jpg";
+                    break;
+            }
+
+  
+            string staticFileName = string.Format("./public/{0}.{1}", fileName, extension);
+
+            try
+            {
+                WebOperationContext.Current.OutgoingResponse.ContentType = contentType;
+                return File.OpenRead(staticFileName);
+            }
+            catch
+            {
+                throw (new WebFaultException<Error>(
+                       new Error(string.Format("File access error for '{0}.{1}'", fileName, extension)),
+                       HttpStatusCode.NotFound));
+            }
+          
+        }
+
+         private WebFaultException<Error> MakeWebFaultException(Exception ex)
         {
             return (ex is WebFaultException<Error>) ?
                 (WebFaultException<Error>)ex :
