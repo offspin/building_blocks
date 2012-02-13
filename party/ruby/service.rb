@@ -8,6 +8,10 @@ module Party
 
     class Service < Sinatra::Base
 
+	before do
+	    response.headers['Cache-Control'] = 'no-cache'
+	end
+
         get '/' do
 
             redirect url('/index.html')

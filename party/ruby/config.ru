@@ -13,6 +13,8 @@ realm = realm_res['string_value']
 opaque_res = THE_DB.get_system_config('OPAQUE')
 opaque = opaque_res['string_value']
 
+the_public = Sinatra.new
+
 the_service = Rack::Auth::Digest::MD5.new(Party::Service, realm, opaque) do |name|
     res = THE_DB.get_user(name)
     pwh = res['password_hash']
@@ -21,6 +23,10 @@ the_service.passwords_hashed = true
 
 map '/service' do 
     run the_service
+end
+
+map '/' do 
+    run the_public
 end
 
 
