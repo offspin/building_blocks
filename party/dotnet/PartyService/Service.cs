@@ -28,6 +28,13 @@ namespace PartyService
 
         }
 
+        public Acknowledgement Ping()
+        {
+            return
+                new Acknowledgement("Service Available");
+
+        }
+
         public Party GetParty(string idStr)
         {
 

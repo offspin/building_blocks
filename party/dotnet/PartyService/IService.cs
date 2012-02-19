@@ -11,12 +11,16 @@ namespace PartyService
     {
 
         [OperationContract]
+        [WebGet(UriTemplate = "ping")]
+        Acknowledgement Ping();
+
+        [OperationContract]
         [WebGet(UriTemplate = "party/{idStr}")]
         [ServiceKnownType(typeof(Person))]
         [ServiceKnownType(typeof(Business))]
         Party GetParty(string idStr);
 
-        [WebGet(UriTemplate = "/party/byname/{name}")]
+        [WebGet(UriTemplate = "party/byname/{name}")]
         [OperationContract]
         PartyResults GetPartiesByName(string name);
 
