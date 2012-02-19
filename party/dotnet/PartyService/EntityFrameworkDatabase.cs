@@ -57,7 +57,7 @@ namespace PartyService
                 foreach (PartySummary partySummary in nameQuery)
                 {
                     partySummary.Link =
-                        string.Format("{0}party/{1}", baseUrl, partySummary.Id);
+                        string.Format("{0}/party/{1}", baseUrl, partySummary.Id);
 
                     partyResults.PartyList.Add(partySummary);
                 }
@@ -99,7 +99,10 @@ namespace PartyService
             {
                 using (PartyEntities context = new PartyEntities(this.connectionString))
                 {
-                    Person person = (Person)GetParty(id);
+                    Person person = (Person)
+                        (from p in context.Parties
+                         where p.Id == id
+                         select p).First();
 
                     if (person != null)
                     {
@@ -149,8 +152,11 @@ namespace PartyService
             {
                 using (PartyEntities context = new PartyEntities(this.connectionString))
                 {
-                    Business business = (Business)GetParty(id);
-
+                    var business = (Business)
+                        (from b in context.Parties
+                         where b.Id == id
+                         select b).First();
+                   
                     if (business != null)
                     {
                         business.Name = name;
@@ -275,7 +281,10 @@ namespace PartyService
             {
                 using (PartyEntities context = new PartyEntities(this.connectionString))
                 {
-                    Address address = (Address)GetContact(id);
+                    Address address = (Address)
+                        (from a in context.Contacts
+                         where a.Id == id
+                         select a).First();
 
                     if (address != null)
                     {
@@ -324,7 +333,11 @@ namespace PartyService
             {
                 using (PartyEntities context = new PartyEntities(this.connectionString))
                 {
-                    Email email = (Email)GetContact(id);
+
+                    Email email = (Email)
+                        (from e in context.Contacts
+                         where e.Id == id
+                         select e).First();
 
                     if (email != null)
                     {
@@ -370,7 +383,10 @@ namespace PartyService
             {
                 using (PartyEntities context = new PartyEntities(this.connectionString))
                 {
-                    Telephone telephone = (Telephone)GetContact(id);
+                    Telephone telephone = (Telephone)
+                        (from t in context.Contacts
+                         where t.Id == id
+                         select t).First();
 
                     if (telephone != null)
                     {
@@ -464,8 +480,11 @@ namespace PartyService
             {
                 using (PartyEntities context = new PartyEntities(this.connectionString))
                 {
-                    PartyContact partyContact = GetPartyContact(partyId, contactId);
-
+                    PartyContact partyContact = (PartyContact)
+                        (from pc in context.PartyContacts
+                         where (pc.PartyId == partyId && pc.ContactId == contactId)
+                         select pc).First();
+                    
                     if (partyContact != null)
                     {
                         partyContact.ValidFrom = validFrom;
@@ -564,7 +583,10 @@ namespace PartyService
             {
                 using (PartyEntities context = new PartyEntities(this.connectionString))
                 {
-                    User user = GetUser(name);
+                    User user = (User)
+                        (from u in context.Users
+                         where u.Name == name
+                         select u).First();
 
                     if (user != null)
                     {
