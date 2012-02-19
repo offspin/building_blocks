@@ -19,6 +19,8 @@ namespace PartyServer
                 typeof(PartyService.IService), 
                 serviceBinding, 
                 "http://localhost:8000/service");
+            ep.Behaviors.Add(new PartyService.ProcessorBehaviour());
+           
   
             WebHttpBinding staticBinding = new WebHttpBinding(WebHttpSecurityMode.None);
             ServiceEndpoint sep = webServiceHost.AddServiceEndpoint(
