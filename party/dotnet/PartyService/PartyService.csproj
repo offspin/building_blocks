@@ -53,6 +53,7 @@
     <Compile Include="IDatabase.cs" />
     <Compile Include="IService.cs" />
     <Compile Include="IStaticItemService.cs" />
+    <Compile Include="MessageProcessor.cs" />
     <Compile Include="Party.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
