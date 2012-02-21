@@ -18,6 +18,12 @@ module Party
 
         end
 
+	get '/ping' do
+
+	    builder :acknowledgement, :locals => { :message => 'Service Available' }
+
+	end
+
         get '/party/byname/:name' do
 
             res = THE_DB.get_party_byname(params[:name])
@@ -86,7 +92,7 @@ module Party
 
             THE_DB.delete_party_contact(party_id, contact_id)
 
-            builder :acknowledge, :locals => { :message => "Contact #{contact_id} removed from party #{party_id}" }
+            builder :acknowledgement, :locals => { :message => "Contact #{contact_id} removed from party #{party_id}" }
 
         end
 
@@ -164,7 +170,7 @@ module Party
 
             THE_DB.delete_party(params[:id])
 
-            builder :acknowledge, :locals => { :message => "Party #{params[:id]} deleted" }
+            builder :acknowledgement, :locals => { :message => "Party #{params[:id]} deleted" }
 
         end
 
@@ -304,7 +310,7 @@ module Party
 
             THE_DB.delete_contact(params[:id])
 
-            builder :acknowledge, :locals => { :message => "Contact #{params[:id]} deleted" }
+            builder :acknowledgement, :locals => { :message => "Contact #{params[:id]} deleted" }
 
         end
 
