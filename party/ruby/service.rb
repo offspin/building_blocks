@@ -177,7 +177,7 @@ module Party
 
         not_found do
            
-           status 404
+           status 200
 
            builder :error, :locals => { :name => nil, :message => 'Resource not found' }
 
@@ -185,6 +185,7 @@ module Party
 
         error do
 
+	   status 200
            the_error = env['sinatra.error']
 
            name = nil
