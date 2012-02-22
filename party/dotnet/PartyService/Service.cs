@@ -46,7 +46,7 @@ namespace PartyService
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("'{0}' is not a valid party identifier", idStr)),
-                        HttpStatusCode.BadRequest));
+                        HttpStatusCode.OK));
                 }
 
                 Party p = database.GetParty(id);
@@ -55,7 +55,7 @@ namespace PartyService
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("Party {0} not found", id)),
-                        HttpStatusCode.NotFound));
+                        HttpStatusCode.OK));
                 }
 
                 return p;
@@ -107,14 +107,14 @@ namespace PartyService
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("'{0}' is not a valid party identifier", idStr)),
-                        HttpStatusCode.BadRequest));
+                        HttpStatusCode.OK));
                 }
 
                 if (database.GetParty(id) == null)
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("Person {0} not found", id)),
-                        HttpStatusCode.NotFound));
+                        HttpStatusCode.OK));
                 }
 
                 database.UpdatePerson(id, person.FirstName, person.LastName, person.DateOfBirth);
@@ -151,14 +151,14 @@ namespace PartyService
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("'{0}' is not a valid party identifier", idStr)),
-                        HttpStatusCode.BadRequest));
+                        HttpStatusCode.OK));
                 }
 
                 if (database.GetParty(id) == null)
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("Business {0} not found", id)),
-                        HttpStatusCode.NotFound));
+                        HttpStatusCode.OK));
                 }
 
                 database.UpdateBusiness(id, business.Name, business.RegNumber);
@@ -183,7 +183,7 @@ namespace PartyService
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("'{0}' is not a valid party identifier", idStr)),
-                        HttpStatusCode.BadRequest));
+                        HttpStatusCode.OK));
                 }
 
                 if (database.GetParty(id) == null)
@@ -213,7 +213,7 @@ namespace PartyService
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("'{0}' is not a valid contact identifier", idStr)),
-                        HttpStatusCode.BadRequest));
+                        HttpStatusCode.OK));
                 }
 
                 Contact c = database.GetContact(id);
@@ -222,7 +222,7 @@ namespace PartyService
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("Contact {0} not found", id)),
-                        HttpStatusCode.NotFound));
+                        HttpStatusCode.OK));
                 }
 
                 return c;
@@ -257,14 +257,14 @@ namespace PartyService
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("'{0}' is not a valid contact identifier", idStr)),
-                        HttpStatusCode.BadRequest));
+                        HttpStatusCode.OK));
                 }
 
                 if (database.GetContact(id) == null)
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("Address {0} not found", id)),
-                        HttpStatusCode.NotFound));
+                        HttpStatusCode.OK));
                 }
 
                 database.UpdateAddress(id, address.Street, address.Town, address.County, address.PostCode);
@@ -300,14 +300,14 @@ namespace PartyService
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("'{0}' is not a valid contact identifier", idStr)),
-                        HttpStatusCode.BadRequest));
+                        HttpStatusCode.OK));
                 }
 
                 if (database.GetContact(id) == null)
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("Email {0} not found", id)),
-                        HttpStatusCode.NotFound));
+                        HttpStatusCode.OK));
                 }
 
                 database.UpdateEmail(id, email.SubType, email.Address);
@@ -343,14 +343,14 @@ namespace PartyService
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("'{0}' is not a valid contact identifier", idStr)),
-                        HttpStatusCode.BadRequest));
+                        HttpStatusCode.OK));
                 }
 
                 if (database.GetContact(id) == null)
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("Telephone {0} not found", id)),
-                        HttpStatusCode.NotFound));
+                        HttpStatusCode.OK));
                 }
 
                 database.UpdateTelephone(id, telephone.SubType, telephone.Number);
@@ -374,7 +374,7 @@ namespace PartyService
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("'{0}' is not a valid contact identifier", idStr)),
-                        HttpStatusCode.BadRequest));
+                        HttpStatusCode.OK));
                 }
 
                 if (database.GetContact(id) == null)
@@ -406,14 +406,14 @@ namespace PartyService
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("'{0}' is not a valid party identifier", partyIdStr)),
-                        HttpStatusCode.BadRequest));
+                        HttpStatusCode.OK));
                 }
 
                 if (!int.TryParse(contactIdStr, out contactId))
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("'{0}' is not a valid contact identifier", contactIdStr)),
-                        HttpStatusCode.BadRequest));
+                        HttpStatusCode.OK));
                 }
 
                 PartyContact partyContact = database.GetPartyContact(partyId, contactId);
@@ -422,7 +422,7 @@ namespace PartyService
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("Party {0} is not linked to contact {1}", partyId, contactId)),
-                        HttpStatusCode.NotFound));
+                        HttpStatusCode.OK));
                 }
 
                 return partyContact;
@@ -447,14 +447,14 @@ namespace PartyService
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("'{0}' is not a valid party identifier", partyIdStr)),
-                        HttpStatusCode.BadRequest));
+                        HttpStatusCode.OK));
                 }
 
                 if (!int.TryParse(contactIdStr, out contactId))
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("'{0}' is not a valid contact identifier", contactIdStr)),
-                        HttpStatusCode.BadRequest));
+                        HttpStatusCode.OK));
                 }
 
                 PartyContact pc = database.GetPartyContact(partyId, contactId);
@@ -488,14 +488,14 @@ namespace PartyService
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("'{0}' is not a valid party identifier", partyIdStr)),
-                        HttpStatusCode.BadRequest));
+                        HttpStatusCode.OK));
                 }
 
                 if (!int.TryParse(contactIdStr, out contactId))
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("'{0}' is not a valid contact identifier", contactIdStr)),
-                        HttpStatusCode.BadRequest));
+                        HttpStatusCode.OK));
                 }
 
                 PartyContact pc = database.GetPartyContact(partyId, contactId);
@@ -504,7 +504,7 @@ namespace PartyService
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("Party {0} is not linked to contact {1}", partyId, contactId)),
-                        HttpStatusCode.NotFound));
+                        HttpStatusCode.OK));
                 }
 
                 database.DeletePartyContact(partyId, contactId);
@@ -531,7 +531,7 @@ namespace PartyService
                 {
                     throw (new WebFaultException<Error>(
                         new Error(string.Format("'{0}' is not a valid party identifier", idStr)),
-                        HttpStatusCode.BadRequest));
+                        HttpStatusCode.OK));
                 }
 
                 ContactResults contactResults = database.GetContactByPartyId(id, baseUrl);
@@ -584,7 +584,7 @@ namespace PartyService
             {
                 throw (new WebFaultException<Error>(
                        new Error(string.Format("File access error for '{0}.{1}'", fileName, extension)),
-                       HttpStatusCode.NotFound));
+                       HttpStatusCode.OK));
             }
           
         }
@@ -594,7 +594,7 @@ namespace PartyService
             return (ex is WebFaultException<Error>) ?
                 (WebFaultException<Error>)ex :
                 new WebFaultException<Error>(
-                    new Error(ex.Message), HttpStatusCode.InternalServerError);
+                    new Error(ex.Message), HttpStatusCode.OK);
         }
 
     }
