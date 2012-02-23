@@ -50,16 +50,7 @@ namespace PartyClient
 
             try
             {
-                if (e.Cancelled)
-                {
-                    throw (new Exception("Request Cancelled"));
-                }
-
-                if (e.Error != null)
-                {
-                    throw (e.Error.InnerException == null) ?
-                        e.Error : e.Error.InnerException;
-                }
+                CheckForErrors(e);
 
                 PartyService.PartyResults pr =
                     (PartyService.PartyResults)((App)App.Current).LoadBusinessObject<PartyService.PartyResults>(e.Result);
@@ -100,17 +91,7 @@ namespace PartyClient
         {
             try
             {
-                if (e.Cancelled)
-                {
-                    throw (new Exception("Request Cancelled"));
-                }
-
-                if (e.Error != null)
-                {
-                    throw (e.Error.InnerException == null) ?
-                        e.Error : e.Error.InnerException;
-                }
-
+                CheckForErrors(e);
 
                 string returnTypeName = app.GetBusinessObjectType(e.Result);
 
