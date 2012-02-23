@@ -1,5 +1,5 @@
 ﻿<Application xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
              x:Class="PartyClient.App">
-    <Application.Resources/>
+    <Application.Resources></Application.Resources>
 </Application>

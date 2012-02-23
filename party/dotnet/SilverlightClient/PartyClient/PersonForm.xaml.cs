@@ -30,8 +30,15 @@ namespace PartyClient
                 person.FirstName = firstNameTextBox.Text.Trim();
                 person.LastName = lastNameTextBox.Text.Trim();
                 person.DateOfBirth = (DateTime)dateOfBirthPicker.SelectedDate;
-                this.webClient = app.ServicePost<PartyService.Person>(
-                   string.Format("person/{0}", person.Id), SaveEventHandler, person);
+
+                string action = "person";
+                if (person.Id > 0)
+                {
+                    action += string.Format("/{0}", person.Id);
+                }
+
+                this.webClient = 
+                    app.ServicePost<PartyService.Person>(action, SaveEventHandler, person);
 
             }
             catch (Exception ex)

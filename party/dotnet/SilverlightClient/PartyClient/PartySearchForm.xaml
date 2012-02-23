@@ -7,13 +7,14 @@
     mc:Ignorable="d"
     d:DesignHeight="400" d:DesignWidth="600" xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk" xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit">
 
-  <toolkit:WhistlerBlueTheme>
+    <toolkit:WhistlerBlueTheme>
         <Grid x:Name="LayoutRoot" HorizontalAlignment="Center" VerticalAlignment="Center">
 
             <Grid.RowDefinitions>
                 <RowDefinition Height="20" />
                 <RowDefinition Height="40" />
-                <RowDefinition Height="*" />
+                <RowDefinition Height="280" />
+                <RowDefinition Height="40" />
             </Grid.RowDefinitions>
 
             <Grid.ColumnDefinitions>
@@ -21,17 +22,17 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <toolkit:WrapPanel Grid.Row="1" Grid.Column="0" VerticalAlignment="Center">
+            <toolkit:WrapPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" VerticalAlignment="Center">
                 <sdk:Label Margin="5" Name="label1" VerticalAlignment="Center" Height="23" Content="Name:" />
                 <TextBox Margin="5" Height="23" Name="nameTextBox" Text="sykes" VerticalAlignment="Center" Width="120" />
             </toolkit:WrapPanel>
-            
+
             <Button Grid.Row="1" Grid.Column="1" Content="Search" Height="23" HorizontalAlignment="Right" Margin="5" Name="nameSearchButton" VerticalAlignment="Center" Width="75" Click="nameSearchButton_Click" />
 
-            <toolkit:BusyIndicator Foreground="Navy" Grid.Row="2" Grid.ColumnSpan="2" IsBusy="False" BusyContent="Please Wait ..." Name="formBusyIndicator" Height="300" Width="460" 
-                               VerticalAlignment="Center" HorizontalAlignment="Center" >
-                
-                <sdk:DataGrid AutoGenerateColumns="False" IsReadOnly="True" Margin="5" Name="partyDataGrid" >
+            <toolkit:BusyIndicator Foreground="Navy" Grid.Row="2" Grid.ColumnSpan="2" IsBusy="False" BusyContent="Please Wait ..." Name="formBusyIndicator" Height="265" Width="460"
+                         VerticalAlignment="Center" HorizontalAlignment="Center" >
+
+                <sdk:DataGrid AutoGenerateColumns="False" IsReadOnly="True" Margin="5" Name="partyDataGrid" SelectionMode="Single">
                     <sdk:DataGrid.Columns>
                         <sdk:DataGridTextColumn Visibility="Collapsed" Binding="{Binding Link}" />
                         <sdk:DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="50" />
@@ -45,11 +46,19 @@
                         </sdk:DataGridTemplateColumn>
                     </sdk:DataGrid.Columns>
                 </sdk:DataGrid>
-                
+
             </toolkit:BusyIndicator>
+
+            <toolkit:WrapPanel Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left">
+                <Button Margin="5" Name="newPersonButton" Height="23" Width="100" Content="New Person" VerticalAlignment="Center" Click="newPersonButton_Click" />
+                <Button Margin="5" Name="newBusinessButton" Height="23" Width="100" Content="New Business" VerticalAlignment="Center" Click="newBusinessButton_Click"/>
+             </toolkit:WrapPanel>
             
+            <toolkit:WrapPanel Grid.Row="3" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right">
+                <Button Margin="5" Name="deletePartyButton" Height="23" Width="100" Content="Delete Selected" VerticalAlignment="Center"  Click="deletePartyButton_Click"/>
+            </toolkit:WrapPanel>
         </Grid>
-        
+
     </toolkit:WhistlerBlueTheme>
-    
+
 </local:PartyClientForm>

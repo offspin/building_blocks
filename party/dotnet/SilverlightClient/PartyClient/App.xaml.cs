@@ -48,7 +48,7 @@ namespace PartyClient
         public WebClient ServicePost<T>(string api, UploadStringCompletedEventHandler eventHandler, T postObject)
         {
 
-            string postData = "<?xml version=\"1.0\" encoding=\"utf-8\"?><dummy/>";
+            string postData="";
 
             if (postObject != null)
             {
@@ -73,6 +73,21 @@ namespace PartyClient
 
             return wc;
         }
+
+        public WebClient ServiceDelete(string action, UploadStringCompletedEventHandler eventHandler)
+        {
+            string postData = " ";
+
+            WebClient wc = new WebClient();
+            Uri uri = new Uri(string.Format("{0}/{1}", PartyServiceUrl, action));
+            wc.UseDefaultCredentials = false;
+            wc.Credentials = this.Credentials;
+            wc.UploadStringCompleted += eventHandler;
+            wc.UploadStringAsync(uri, postData);
+
+            return wc;
+           
+        }             
 
         public string GetBusinessObjectType(Stream s)
         {

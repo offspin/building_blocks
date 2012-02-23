@@ -44,8 +44,15 @@ namespace PartyClient
                 PartyService.Business business = (PartyService.Business)DataContext;
                 business.Name = nameTextBox.Text.Trim();
                 business.RegNumber = regNumberTextBox.Text.Trim();
-                this.webClient = app.ServicePost<PartyService.Business>(
-                   string.Format("business/{0}", business.Id), SaveEventHandler, business);
+
+                string action = "business";
+                if (business.Id > 0)
+                {
+                    action += string.Format("/{0}", business.Id);
+                }
+
+                this.webClient = 
+                    app.ServicePost<PartyService.Business>(action, SaveEventHandler, business);
 
             }
             catch (Exception ex)

@@ -10,7 +10,7 @@
     d:DesignHeight="200" d:DesignWidth="400" >
 
     <toolkit:BusyIndicator Foreground="Navy" Name="formBusyIndicator"  BusyContent="Please Wait ...">
-      <toolkit:WhistlerBlueTheme>
+        <toolkit:WhistlerBlueTheme>
 
             <Grid x:Name="LayoutRoot" VerticalAlignment="Center">
 
@@ -32,9 +32,9 @@
                 <sdk:Label Grid.Row="2" Grid.Column="0"  Content="Last Name:" Height="23" HorizontalAlignment="Right" Margin="5" Name="label2" VerticalAlignment="Center" />
                 <TextBox Grid.Row="2" Grid.Column="1" Height="23" HorizontalAlignment="Left" Margin="5" Name="lastNameTextBox" VerticalAlignment="Center" Width="200" Text="{Binding LastName}" TextChanged="lastNameTextBox_TextChanged"/>
                 <sdk:Label Grid.Row="3" Grid.Column="0" Height="23" HorizontalAlignment="Right" Margin="5" Name="label3" VerticalAlignment="Center" Content="Date Of Birth:"/>
+                <sdk:DatePicker Foreground="Black" Grid.Column="1" Grid.Row="3" Height="23" HorizontalAlignment="Left" Margin="5" Name="dateOfBirthPicker" VerticalAlignment="Center" Width="120" SelectedDate="{Binding DateOfBirth}" CalendarClosed="dateOfBirthPicker_CalendarClosed" TextInputStart="dateOfBirthPicker_TextInputStart" />
                 <Button Grid.Row="4" Grid.Column="0" Content="Save" Height="23" HorizontalAlignment="Right" Margin="5" Name="saveButton" VerticalAlignment="Center" Width="75" Click="saveButton_Click"/>
                 <Button Grid.Row="4" Grid.Column="1" Content="Cancel" Height="23" HorizontalAlignment="Left" Margin="5" Name="cancelButton" VerticalAlignment="Center" Width="75" Click="cancelButton_Click" />
-                <sdk:DatePicker Foreground="Black" Grid.Column="1" Grid.Row="3" Height="23" HorizontalAlignment="Left" Margin="5" Name="dateOfBirthPicker" VerticalAlignment="Center" Width="120" SelectedDate="{Binding DateOfBirth}" CalendarClosed="dateOfBirthPicker_CalendarClosed" TextInputStart="dateOfBirthPicker_TextInputStart" />
             </Grid>
         </toolkit:WhistlerBlueTheme>
     </toolkit:BusyIndicator>
