@@ -1,0 +1,41 @@
+﻿<local:PartyClientForm x:Class="PartyClient.PersonForm"
+    xmlns:local="clr-namespace:PartyClient"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk" 
+    xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
+    mc:Ignorable="d"
+    d:DesignHeight="200" d:DesignWidth="400" >
+
+    <toolkit:BusyIndicator Foreground="Navy" Name="formBusyIndicator"  BusyContent="Please Wait ...">
+      <toolkit:WhistlerBlueTheme>
+
+            <Grid x:Name="LayoutRoot" VerticalAlignment="Center">
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="20"/>
+                    <RowDefinition Height="40"/>
+                    <RowDefinition Height="40"/>
+                    <RowDefinition Height="40"/>
+                    <RowDefinition Height="40"/>
+                </Grid.RowDefinitions>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <sdk:Label Grid.Row="1" Grid.Column="0" Height="23" HorizontalAlignment="Right" Margin="5" Name="label1" VerticalAlignment="Center" Content="First Name:" />
+                <TextBox Grid.Row="1" Grid.Column="1" Height="23" HorizontalAlignment="Left" Margin="5" Name="firstNameTextBox" VerticalAlignment="Center" Width="200" Text="{Binding FirstName}" TextChanged="firstNameTextBox_TextChanged" />
+                <sdk:Label Grid.Row="2" Grid.Column="0"  Content="Last Name:" Height="23" HorizontalAlignment="Right" Margin="5" Name="label2" VerticalAlignment="Center" />
+                <TextBox Grid.Row="2" Grid.Column="1" Height="23" HorizontalAlignment="Left" Margin="5" Name="lastNameTextBox" VerticalAlignment="Center" Width="200" Text="{Binding LastName}" TextChanged="lastNameTextBox_TextChanged"/>
+                <sdk:Label Grid.Row="3" Grid.Column="0" Height="23" HorizontalAlignment="Right" Margin="5" Name="label3" VerticalAlignment="Center" Content="Date Of Birth:"/>
+                <Button Grid.Row="4" Grid.Column="0" Content="Save" Height="23" HorizontalAlignment="Right" Margin="5" Name="saveButton" VerticalAlignment="Center" Width="75" Click="saveButton_Click"/>
+                <Button Grid.Row="4" Grid.Column="1" Content="Cancel" Height="23" HorizontalAlignment="Left" Margin="5" Name="cancelButton" VerticalAlignment="Center" Width="75" Click="cancelButton_Click" />
+                <sdk:DatePicker Foreground="Black" Grid.Column="1" Grid.Row="3" Height="23" HorizontalAlignment="Left" Margin="5" Name="dateOfBirthPicker" VerticalAlignment="Center" Width="120" SelectedDate="{Binding DateOfBirth}" CalendarClosed="dateOfBirthPicker_CalendarClosed" TextInputStart="dateOfBirthPicker_TextInputStart" />
+            </Grid>
+        </toolkit:WhistlerBlueTheme>
+    </toolkit:BusyIndicator>
+</local:PartyClientForm>
